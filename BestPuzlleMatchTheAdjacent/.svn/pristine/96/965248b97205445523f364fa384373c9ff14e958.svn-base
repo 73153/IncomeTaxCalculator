@@ -1,0 +1,22 @@
+
+
+#include "BulletItem.h"
+
+BulletItem::BulletItem() {
+	function = "bullet";
+
+}
+
+BulletItem::~BulletItem() {
+}
+
+BulletItem* BulletItem::createBulletItem() {
+
+	BulletItem* BulletItem = new class BulletItem();
+	if (BulletItem
+			&& BulletItem->initWithFile("bullet.png")) {
+		return BulletItem;
+	}
+	CC_SAFE_DELETE(BulletItem);
+	return NULL;
+}

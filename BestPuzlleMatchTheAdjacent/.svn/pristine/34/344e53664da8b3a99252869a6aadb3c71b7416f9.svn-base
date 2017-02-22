@@ -1,0 +1,66 @@
+//
+//  HelloCocosBuilderLayer.cpp
+//  Demo
+//  Created by Neil D on 20/05/13.
+
+#include "HomeLayer.h"
+#include "../GameManager/GameManager.h"
+#include "../GameManager/common_function.h"
+#include "../SoundManager/SoundManager.h"
+USING_NS_CC;
+USING_NS_CC_EXT;
+HomeLayer::HomeLayer():mAnimationManager(NULL)
+{
+   CCLog("constructor called");
+}
+HomeLayer::~HomeLayer()
+{
+    CCLog("destracture called");
+}
+void HomeLayer::onExit()
+{
+    CCTextureCache::sharedTextureCache()->removeUnusedTextures();
+    CCLayer::onExit();
+}
+void HomeLayer::onEnter()
+{
+    this->setTouchEnabled(true);
+    CCLayer::onEnter();
+}
+#pragma mark -
+#pragma mark ccb methods
+void HomeLayer::onNodeLoaded(cocos2d::CCNode * pNode,  cocos2d::extension::CCNodeLoader * pNodeLoader)
+{
+    CCLOG("on loaded called");
+}
+SEL_CallFuncN HomeLayer::onResolveCCBCCCallFuncSelector(CCObject * pTarget, const char* pSelectorName)
+{
+    
+    
+    return NULL;
+}
+SEL_MenuHandler HomeLayer::onResolveCCBCCMenuItemSelector(CCObject * pTarget, const char * pSelectorName)
+{
+    CCB_SELECTORRESOLVER_CCMENUITEM_GLUE(this,"onPlayClicked", HomeLayer::onPlayClicked);
+
+    
+       return NULL;
+}
+SEL_CCControlHandler HomeLayer::onResolveCCBCCControlSelector(CCObject * pTarget, const char * pSelectorName)
+{
+    return NULL;
+}
+bool HomeLayer::onAssignCCBMemberVariable(CCObject * pTarget, const char * pMemberVariableName, CCNode * pNode)
+{
+    return false;
+}
+bool HomeLayer::onAssignCCBCustomProperty(CCObject* pTarget, const char* pMemberVariableName, cocos2d::extension::CCBValue* pCCBValue)
+{
+    bool bRet = false;
+    return bRet;
+}
+
+void HomeLayer::onPlayClicked(CCNode* sender)
+{
+       GameManager::sharedGameManager()->gotoScene(1);
+}

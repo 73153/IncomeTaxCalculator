@@ -1,0 +1,135 @@
+
+#include "Ball.h"
+
+Ball::Ball() {
+	velocity.speed = 20;
+
+	velocity.x = 10 + rand() % 73205 / 10000;
+	if (rand() & 1)
+		velocity.x = -velocity.x;
+	velocity.y = -sqrt(
+			velocity.speed * velocity.speed - velocity.x * velocity.x);
+
+	frameLasted = 0;
+	frozenFrameLasted = 0;
+	skewFrameLasted = 0;
+}
+
+Ball::~Ball() {
+	
+}
+
+Ball* Ball::createBall() {
+
+	Ball* ball = new Ball();
+
+	if (ball && ball->initWithFile("ball.png")) {
+		return ball;
+	}
+	CC_SAFE_DELETE(ball);
+	return NULL;
+
+}
+
+Ball* Ball::createGhostBall() {
+
+	Ball* ball = new Ball();
+
+	if (ball && ball->initWithFile("ghostBall.png")) {
+		return ball;
+	}
+	CC_SAFE_DELETE(ball);
+	return NULL;
+
+}
+float Ball::getWidth() {
+	return this->getTextureRect().getMaxY();
+}
+
+float Ball::getHeight() {
+	return this->getTextureRect().getMaxX();
+}
+
+float Ball::getRadius() {
+	return this->getTextureRect().getMaxX() / 2;
+}
+
+Velocity Ball::getVelocity() {
+	return velocity;
+}
+
+Velocity Ball::setVelocity(Velocity v) {
+	velocity = v;
+}
+
+b2Body* Ball::getBallBody() {
+	return ballBody;
+}
+void Ball::setBallBody(b2Body* ballBody) {
+	this->ballBody = ballBody;
+}
+
+CCRect Ball::rect() {
+
+	CCSize s = this->getContentSize();
+	return CCRectMake(this->getPosition().x - s.width / 2,
+			this->getPosition().y - s.height / 2, s.width, s.height);
+
+}
+
+void Ball::frameAddOne() {
+	frameLasted++;
+
+}
+int Ball::getFrameLasted() {
+	return frameLasted;
+
+}
+
+int Ball::getPriority() {
+	priority = this->getPosition().y
+			- CCDirector::sharedDirector()->getWinSize().height;
+	priority += ballBody->GetLinearVelocity().y;
+	return priority;
+}
+
+void Ball::frozenFrameAddOne() {
+	frozenFrameLasted++;
+}
+int Ball::getFrozenFrameLasted() {
+	return frozenFrameLasted;
+}
+void Ball::setFrozenFrameTo0() {
+	frozenFrameLasted = 0;
+}
+
+void Ball::skewFrameAddOne() {
+	skewFrameLasted++;
+}
+int Ball::getSkewFrameLasted() {
+	return skewFrameLasted;
+}
+void Ball::setSkewFrameLastedTo0() {
+	skewFrameLasted = 0;
+}
+
+
+//Bouncing against a vertical line.
+float Ball::verticalBounce(float pAngle)
+{
+    if(angle == 0.0f || angle == 180.0f)
+        angle += -180.0f;
+    else
+        angle = 180.0f - angle;
+    return angle;
+}
+
+//Bouncing against a horizontal line.
+float Ball::horizontalBounce(float pAngle)
+{
+    if(angle == 0.0f || angle == 180.0f)
+        angle += -180.0f;
+    else
+        angle = 360.0f - angle;
+    return angle;
+}

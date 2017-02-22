@@ -1,0 +1,1097 @@
+#include "GameLayer.h"
+#include "SimpleAudioEngine.h"
+#include "GameManager.h"
+
+using namespace cocos2d;
+using namespace CocosDenshion;
+
+enum {
+    kTagBall = 1,
+    kTagBrick = 2,
+};
+
+GameLayer* GameLayer::layer;
+Ball* GameLayer::ball;
+//Ball* GameLayer::ball;
+MyPaddle* GameLayer::myPaddle;
+Brick* GameLayer::BrickPaddle;
+
+
+GameLayer* GameLayer::getLayer() {
+    return layer;
+}
+GameLayer::GameLayer():mAnimationManager(NULL),paddleNode(NULL),bricksPosArr(NULL),pauseButton(NULL),pauseBtn(NULL)
+{
+    
+}
+GameLayer::~GameLayer()
+{
+    CC_SAFE_RELEASE_NULL(bricksPosArr);
+}
+
+void GameLayer::initBackground() {
+    //	CCSize size = CCDirector::sharedDirector()->getWinSize();
+    //
+    //	//Background
+    //	CCSprite* gameLayerBackground = CCSprite::create(
+    //                                                     "GameSceneBackground.png");
+    //	gameLayerBackground->setPosition(ccp(size.width / 2, size.height / 2));
+    //	this->addChild(gameLayerBackground, 0);
+}
+
+
+
+bool GameLayer::init() {
+    if (!CCLayer::init()) {
+        return false;
+    }
+    winSize = CCDirector::sharedDirector()->getWinSize();
+    
+    b2Vec2 gravity(0.0f, 0.0f);
+    world = new b2World(gravity);
+    
+    m_contactListener = new ContactListener();
+    world->SetContactListener(m_contactListener);
+    
+    
+    return true;
+}
+void GameLayer::onExitTransitionDidStart()
+{
+    CCLayer::onExitTransitionDidStart();
+}
+
+void GameLayer::onEnterTransitionDidFinish() {
+    
+    CCLayer::onEnterTransitionDidFinish();
+    if (SettingLayer::getControlMode() == SettingLayer::GRAVITY) {
+        setAccelerometerEnabled(true);
+        setTouchEnabled(false);
+        
+    } else {
+        setTouchEnabled(true);
+        setAccelerometerEnabled(false);
+        b2Vec2 gravity(0, 0);
+        world->SetGravity(gravity);
+    }
+    
+    //	CCActionInterval* actionTo1 = CCMoveTo::create(0.3,
+    //                                                   ccp(winSize.width / 4, winSize.height - 50));
+    //	CCActionInterval* actionTo2 = CCMoveTo::create(0.4,
+    //                                                   ccp(winSize.width * 3 / 4, winSize.height - 50));
+    //	CCActionInterval* actionTo3 = CCMoveTo::create(0.5,
+    //                                                   ccp(winSize.width * 3 / 4 + 80, winSize.height - 65));
+    //	pauseButton->runAction(actionTo1);
+    //	scoresLabel->runAction(actionTo2);
+    //	scores->runAction(actionTo3);
+    CCActionInterval *fade = CCFadeIn::create(1.0f);
+    
+    myPaddle->runAction(CCSequence::create(CCFadeIn::create(1.0f), NULL));
+    
+    list<Ball *>::iterator it = ballList.begin();
+    
+    for( it; it != ballList.end(); it++ )
+    {
+        if( (*it) != NULL )
+        {
+            (*it)->runAction(fade);
+        }
+    }
+    if (!itemList.empty()) {
+        
+        for (list<Item *>::iterator it = itemList.begin(); it != itemList.end();
+             it++) {
+            (*it)->runAction(fade);
+        }
+        
+    }
+    
+    if (newGame) {
+        if (ScoreData::gameIsOver) {
+            ScoreData::setScoreTo0();
+            scores->setString("0");
+        }
+        countDown();
+    }
+}
+
+void GameLayer::countDown() {
+    
+    
+}
+
+void GameLayer::buildGround() {
+    
+    // Create edges around the entire screen
+    b2BodyDef groundBodyDef;
+    groundBodyDef.position.Set(0,0);
+    groundBody = world->CreateBody(&groundBodyDef);
+    
+    b2EdgeShape groundBox;
+    b2FixtureDef groundBoxDef;
+    groundBoxDef.shape = &groundBox;
+    
+    //Bottom to restict game over
+    groundBox.Set(b2Vec2(0,0), b2Vec2(winSize.width/PTM_RATIO, 0));
+    bottomFixture = groundBody->CreateFixture(&groundBoxDef);
+    
+    groundBox.Set(b2Vec2(0,0), b2Vec2(0, winSize.height/PTM_RATIO));
+    groundBody->CreateFixture(&groundBoxDef);
+    
+    groundBox.Set(b2Vec2(0, winSize.height/PTM_RATIO), b2Vec2(winSize.width/PTM_RATIO,
+                                                              winSize.height/PTM_RATIO));
+    groundBody->CreateFixture(&groundBoxDef);
+    
+    groundBox.Set(b2Vec2(winSize.width/PTM_RATIO, winSize.height/PTM_RATIO),
+                  b2Vec2(winSize.width/PTM_RATIO, 0));
+    groundBody->CreateFixture(&groundBoxDef);
+    
+}
+
+void GameLayer::buildBall() {
+    ball = Ball::createBall();
+    ball->setTag(0);
+    list<Ball *>::iterator it = ballList.begin();
+    
+    
+    ballList.push_back(ball);
+    //	ball->setOpacity(0);
+    this->addChild(ball, 2, 0);
+    
+    //ball body
+    b2BodyDef ballBodyDef;
+    ballBodyDef.type = b2_dynamicBody;
+    ballBodyDef.position.Set(ball->getPosition().x / PTM_RATIO,
+                             ball->getPosition().y / PTM_RATIO);
+    ballBodyDef.userData = ball;
+    ballBodyDef.gravityScale = 0.0f;
+    ball->setBallBody(world->CreateBody(&ballBodyDef));
+    ball->getBallBody()->SetUserData(ball);
+    //circle shape
+    
+    b2CircleShape circle;
+    circle.m_radius = ball->getRadius() / PTM_RATIO;
+    
+    //ball shape
+    b2FixtureDef ballFixtureDef;
+    ballFixtureDef.shape = &circle;
+    ballFixtureDef.density = 1.0f;
+    ballFixtureDef.friction = 0.0f;
+    ballFixtureDef.restitution = 1.0f;
+    b2Fixture *ballFixture = ball->getBallBody()->CreateFixture(
+                                                                &ballFixtureDef);
+    b2Vec2 v = b2Vec2(myPaddle->getPositionX(), ball->getVelocity().y);
+    v.y = -v.y;
+    ball->getBallBody()->SetLinearVelocity(v);
+}
+
+void GameLayer::buildMyPaddle() {
+    
+    //my paddle;
+    myPaddle = MyPaddle::createMyPaddle();
+    myPaddle->setTag(1000);
+    myPaddle->setPosition(ccp(winSize.width / 2, myPaddle->getTextureRect().getMidY() + 30));
+    myPaddle->setOpacity(0);
+    this->addChild(myPaddle, 100, 1);
+    
+    //my paddle body
+    b2BodyDef myPaddleBodyDef;
+    myPaddleBodyDef.type = b2_dynamicBody;
+    myPaddleBodyDef.position.Set(myPaddle->getPosition().x / PTM_RATIO,
+                                 myPaddle->getPosition().y / PTM_RATIO);
+    myPaddleBodyDef.userData = myPaddle;
+    myPaddle->setMyPaddleBody(world->CreateBody(&myPaddleBodyDef));
+    
+    //my paddle fixture
+    b2FixtureDef myPaddleFixtureDef;
+    b2PolygonShape myPaddleShape;
+    myPaddleShape.SetAsBox(myPaddle->getContentSize().width / 2 / PTM_RATIO,
+                           myPaddle->getContentSize().height / 2 / PTM_RATIO);
+    myPaddleFixtureDef.shape = &myPaddleShape;
+    myPaddleFixtureDef.density = 10.0f;
+    myPaddleFixtureDef.friction = 0.4f;
+    myPaddleFixtureDef.restitution = 0.02f;
+    
+    myPaddleFixture = myPaddle->getMyPaddleBody()->CreateFixture(&myPaddleFixtureDef);
+}
+
+void GameLayer::buildBrickPaddle() {
+    
+    for (int i = 11; i <= 122; i++) {
+        CCSprite *brickSpr = (CCSprite*)this->getChildByTag(i);
+        Brick* brick = new Brick();
+        brick->Init(this, world,brickSpr,1);
+        m_Bricks.push_back( brick );
+    }
+    //    //Color brick
+    //    for (int i = 11; i <= 30; i++) {
+    //        CCSprite *BrickSpr = (CCSprite*)this->getChildByTag(i);
+    //        Brick* Brick = new Brick();
+    //        Brick->Init(this, world,BrickSpr);
+    //        m_Bricks.push_back( Brick );
+    //    }
+    
+}
+
+void GameLayer::restrictPaddleMovement() {
+    //restrict paddle's movement
+    b2PrismaticJointDef jointDef;
+    b2Vec2 worldAxis(1.0f, 0.0f);
+    jointDef.collideConnected = true;
+    jointDef.Initialize(myPaddle->getMyPaddleBody(), groundBody,
+                        myPaddle->getMyPaddleBody()->GetWorldCenter(), worldAxis);
+    world->CreateJoint(&jointDef);
+}
+
+MyPaddle* GameLayer::getMyPaddle() {
+    return myPaddle;
+}
+Brick* GameLayer::getBrick()
+{
+    return BrickPaddle;
+}
+
+void GameLayer::update(float delta) {
+    if (!gameIsPaused) {
+        
+        world->Step(delta, 10, 10);
+        for (b2Body *b = world->GetBodyList(); b; b = b->GetNext()) {
+            if (b->GetUserData() != NULL) {
+                CCSprite *sprite = (CCSprite *) b->GetUserData();
+                sprite->setPosition(ccp(b->GetPosition().x * PTM_RATIO,
+                                        b->GetPosition().y * PTM_RATIO));
+            }
+        }
+        // start of remove hit Bricks code
+        std::vector<b2Body*> toRemove;
+        std::vector<ContactHolder>::iterator pos = m_contactListener->contacts.begin();
+        for( pos; pos != m_contactListener->contacts.end(); pos++ )
+        {
+            b2Body* bodyA = pos->fixtureA->GetBody();
+            b2Body* bodyB = pos->fixtureB->GetBody();
+            
+            if(bodyA != NULL && bodyB != NULL )
+            {
+                CCSprite* spriteA = (CCSprite*) bodyA->GetUserData();
+                CCSprite* spriteB = (CCSprite*) bodyB->GetUserData();
+                
+                if( spriteA != NULL && spriteB != NULL )
+                {
+                    if(spriteA->getTag() == 2 && spriteB->getTag() == 0)
+                    {
+                        toRemove.push_back( bodyA );
+                        dropItem(spriteA->getPosition());
+                    }
+                    else if (spriteA->getTag() == 1 && spriteB->getTag() == 0)
+                    {
+                        
+                    }
+                }
+            }
+        }
+        avoidUnwantedSituation();
+        
+        if (!itemList.empty() && itemList.size() > 0) {
+            list<Item *>::iterator it = itemList.begin();
+            while(it != itemList.end())
+            {
+                if( (*it) != NULL )
+                {
+                    if (myPaddle->boundingBox().intersectsRect((*it)->boundingBox())) {
+                        
+                        ScoreData::itemScore();
+                        if ((*it)->getFunction() == "enlarge") {
+                            enlargePaddle(ball);
+                        } else if ((*it)->getFunction() == "reverseX") {
+                            reverseBallXVelocity();
+                        } else if ((*it)->getFunction() == "reverseY") {
+                            reverseBallYVelocity();
+                        } else if ((*it)->getFunction() == "double") {
+                            buildBall();
+                        } else if ((*it)->getFunction() == "freeze") {
+                            freezeBall();
+                        } else if ((*it)->getFunction() == "shorten") {
+                            shortenPaddle(ball);
+                        } else if ((*it)->getFunction() == "stealth") {
+                            stealthBall();
+                        } else if ((*it)->getFunction() == "magnet") {
+                            skewBall();
+                        }
+                        ((*it)->removeFromParentAndCleanup(true));
+                        it = itemList.erase(it);
+                        
+                    } else if((*it)->getPositionY() < myPaddle->getPositionY()-100) {
+                        ((*it)->removeFromParentAndCleanup(true));
+                        it = itemList.erase(it);
+                    }
+                    else
+                    {
+                        it++;
+                    }
+                }
+            }
+        }
+        
+        std::vector<b2Body*>::iterator removePos = toRemove.begin();
+        for( removePos; removePos != toRemove.end(); removePos++ )
+        {
+            if( (*removePos) != NULL )
+            {
+                std::vector<Brick*>::iterator BrickPos = m_Bricks.begin();
+                while(BrickPos != m_Bricks.end())
+                {
+                    if( (*BrickPos)->m_body == (*removePos) )
+                    {
+                        (*BrickPos)->UnInit();
+                        BrickPos = m_Bricks.erase( BrickPos );
+                        BrickPos = m_Bricks.end();
+                    }
+                    else
+                    {
+                        ++BrickPos;
+                    }
+                }
+            }
+        }
+        
+        // Game won condition check
+        if( m_Bricks.size() == 0)
+        {
+            if (!itemList.empty() && itemList.size() > 0) {
+                list<Item *>::iterator it = itemList.begin();
+                while(it != itemList.end())
+                {
+                    if( (*it) != NULL )
+                    {
+                        (*it)->removeFromParentAndCleanup(true);
+                        it = itemList.erase(it);
+                    }
+                    else
+                    {
+                        it++;
+                    }
+                }
+            }
+            if (!ballList.empty() && ballList.size() > 0) {
+                list<Ball *>::iterator it = ballList.begin();
+                while(it != ballList.end())
+                {
+                    if( (*it) != NULL )
+                    {
+                        (*it)->removeFromParentAndCleanup(true);
+                        it = ballList.erase(it);
+                    }
+                    else
+                    {
+                        it++;
+                    }
+                }
+            }
+            
+            this->unscheduleAllSelectors();
+            CCSprite *bg = CCSprite::create("ContinueBackground.png");
+            bg->setPosition(ccp(winSize.width / 2, winSize.height / 2));
+            this->addChild(bg, 1);
+            gameIsEnded = true;
+            ScoreData::gameIsOver = false;
+            newGame = false;
+            ScoreData::winRound();
+            restartConfirm();
+        }
+        char temp[10];
+        sprintf(temp, "%d", ScoreData::getScore());
+        //		scores->setString(temp);
+        
+        if (!gameIsEnded) {
+            list<Ball *>::iterator it = ballList.begin();
+            for( it; it != ballList.end(); it++ )
+            {
+                if( (*it) != NULL )
+                {
+                    if ((*it)->getPosition().y < -(*it)->getHeight() / 2) {
+                        (*it)->removeFromParentAndCleanup(true);
+                        it = ballList.erase(it);
+                    }
+                }
+            }
+            if(ballList.size()==0)
+            {
+                if (!itemList.empty() && itemList.size() > 0) {
+                    list<Item *>::iterator it = itemList.begin();
+                    while(it != itemList.end())
+                    {
+                        if( (*it) != NULL )
+                        {
+                            (*it)->removeFromParentAndCleanup(true);
+                            it = itemList.erase(it);
+                        }
+                        else
+                        {
+                            it++;
+                        }
+                    }
+                }
+                
+                if (!ballList.empty() && ballList.size() > 0) {
+                    list<Ball *>::iterator it = ballList.begin();
+                    while(it != ballList.end())
+                    {
+                        if( (*it) != NULL )
+                        {
+                            (*it)->removeFromParentAndCleanup(true);
+                            it = ballList.erase(it);
+                        }
+                        else
+                        {
+                            it++;
+                        }
+                    }
+                }
+                this->unscheduleAllSelectors();
+                
+                CCSprite *bg = CCSprite::create(
+                                                "RestartBackground.png");
+                bg->setPosition(ccp(winSize.width / 2, winSize.height / 2));
+                this->addChild(bg, 1);
+                gameIsEnded = true;
+                newGame = false;
+                ScoreData::gameIsOver = true;
+                setHighScore();
+                restartConfirm();
+            }
+        }
+        
+    } else {
+        //        char temp[10];
+        //        sprintf(temp, "%d", ScoreData::getScore());
+        //        scores->setString(temp);
+    }
+}
+
+void GameLayer::restartConfirm() {
+    if (gameIsEnded) {
+        
+        if (ScoreData::gameIsOver) {
+            CCMenuItemImage *restartButton = CCMenuItemImage::create(
+                                                                     "Restart.png",
+                                                                     "Restart_Pressed.png", this,
+                                                                     menu_selector(GameLayer::restart));
+            restartButton->setPosition(ccp(0, 0));
+            CCMenu* pMenusSetting = CCMenu::create(restartButton, NULL);
+            pMenusSetting->setPosition(
+                                       ccp(winSize.width / 2, winSize.height - 789.5));
+            this->addChild(pMenusSetting, 10);
+            
+        } else {
+            CCMenuItemImage *restartButton = CCMenuItemImage::create(
+                                                                     "Continue.png",
+                                                                     "Continue_Pressed.png", this,
+                                                                     menu_selector(GameLayer::restart));
+            restartButton->setPosition(ccp(0, 0));
+            CCMenu* pMenusSetting = CCMenu::create(restartButton, NULL);
+            pMenusSetting->setPosition(
+                                       ccp(winSize.width / 2, winSize.height - 789.5));
+            this->addChild(pMenusSetting, 10);
+        }
+    }
+}
+
+void GameLayer::restart() {
+    
+    //	CCDirector::sharedDirector()->replaceScene(GameLayer::scene());
+    GameManager::sharedGameManager()->gotoScene(1);
+    newGame = true;
+}
+
+void GameLayer::dropItem(CCPoint itemPos) {
+    
+    if (!gameIsEnded && !gameIsPaused && itemList.size() < MAX_ITEM) {
+        int type = rand() % 8;
+        
+        if (type == 0) {
+            item = EnlargeItem::createEnlargeItem();
+        } else if (type == 1) {
+            item = ReverseXItem::createReverseXItem();
+        } else if (type == 2) {
+            item = DoubleItem::createDoubleItem();
+        } else if (type == 3) {
+            item = ReverseYItem::createReverseYItem();
+        } else if (type == 4) {
+            item = FreezeItem::createFreezeItem();
+        } else if (type == 5) {
+            item = ShortenItem::createShortenItem();
+        } else if (type == 6) {
+            item = StealthItem::createStealthItem();
+        } else if (type <= 7) {
+            item = SkewingItem::createSkewingItem();
+        }
+        //        item->setfirstItem(item);
+        
+        item->setPosition(itemPos);
+        this->addChild(item, 100);
+        itemList.push_back(item);
+        
+        int imgWidth = item->getContentSize().width;
+        int imgHeight = item->getContentSize().height;
+        
+        int min = imgWidth / 2;
+        int max = (CCEGLView::sharedOpenGLView()->getFrameSize().width + CCEGLView::sharedOpenGLView()->getFrameSize().width - imgWidth) / 2;
+        
+        //        int x = min + (float)rand() / RAND_MAX * (max - min);
+        
+        CCFiniteTimeAction* action2 = CCMoveTo::create(4.f,ccp(itemPos.x,myPaddle->getPositionY()-200));
+        //	CCFiniteTimeAction* actionMoveDone = CCCallFuncN::create( item, callfuncN_selector(GameRun::spriteMoveFinished));
+        
+        item->runAction(action2);
+    }
+}
+
+
+void GameLayer::paddleTimer() {
+    if (!gameIsPaused) {
+        
+        if (myPaddle->getLengthState() == Paddle::longPaddle) {
+            CCActionInterval* shortenActionBy = CCScaleBy::create(0.5f, 0.5f,1.0f);
+            if (myPaddle->getFrameLasted() > 100) {
+                myPaddle->setFrameLastedTo0();
+                myPaddle->setLengthState(Paddle::normalPaddle);
+                myPaddle->runAction(shortenActionBy);
+            } else {
+                myPaddle->frameAddOne();
+                
+            }
+            
+        }
+        else if (myPaddle->getLengthState() == Paddle::shortPaddle) {
+            CCActionInterval* enlargeActionBy = CCScaleBy::create(0.2f, 2.0f,
+                                                                  1.0f);
+            if (myPaddle->getFrameLasted() > 100) {
+                myPaddle->setFrameLastedTo0();
+                myPaddle->setLengthState(Paddle::normalPaddle);
+                myPaddle->runAction(enlargeActionBy);
+            }
+            else {
+                myPaddle->frameAddOne();
+                
+            }
+        }
+    }
+}
+
+void GameLayer::avoidUnwantedSituation() {
+    
+    list<Ball *>::iterator it = ballList.begin();
+    for( it; it != ballList.end(); it++ )
+    {
+        if( (*it) != NULL )
+        {
+            b2Vec2 bv = (*it)->getBallBody()->GetLinearVelocity();
+            CCPoint ballPosition = (*it)->getPosition();
+            
+            float bs = bv.x * bv.x + bv.y * bv.y*0.3;
+            
+            //            //Check if the ball bounces against the vertical border of the field
+            //            if(ballPosition.x < 0.0f || ballPosition.x > winSize.width)
+            //            {
+            //                (*it)->verticalBounce(-90.0f);
+            //                CCLOG("Angle changed");
+            //
+            //            }
+            //            //Check if the ball bounces against the horizontal border of the field
+            //            if(ballPosition.y < 0.0f || ballPosition.y > winSize.height)
+            //            {
+            //                CCLOG("Angle changed");
+            //                (*it)->horizontalBounce(-90.0f);
+            //            }
+            //
+            
+            if (!freezeMode) {
+                if (bs < 9000) {
+                    b2Vec2 *bf = new b2Vec2(bv.x, bv.y);
+                    (*it)->getBallBody()->ApplyForceToCenter(*bf);
+                }
+            }
+            
+            if (bs > 12000) {
+                b2Vec2 *bf = new b2Vec2(-bv.x * 10, -bv.y * 10);
+                (*it)->getBallBody()->ApplyForceToCenter(*bf);
+            }
+            
+            if (ball != NULL) {
+                b2Vec2 gv = (*it)->getBallBody()->GetLinearVelocity();
+                float gs = gv.x * gv.x + gv.y * gv.y*0.2;
+                if (gs < 9000) {
+                    b2Vec2 *gf = new b2Vec2(gv.x, gv.y);
+                    (*it)->getBallBody()->ApplyForceToCenter(*gf);
+                }
+                
+                else if (bs > 12000) {
+                    b2Vec2 *gf = new b2Vec2(-gv.x, -gv.y);
+                    
+                    (*it)->getBallBody()->ApplyForceToCenter(*gf);
+                }
+            }
+            
+            if (bv.y * bv.y < bs / 4) {
+                if (bv.y < 0) {
+                    
+                    bv.y = -sqrt(bs) / 2;
+                    
+                } else {
+                    
+                    bv.y = sqrt(bs) / 2;
+                }
+                
+                if (bv.x < 0) {
+                    
+                    bv.x = -sqrt(bs - bv.y * bv.y);
+                    
+                } else {
+                    
+                    bv.x = sqrt(bs - bv.y * bv.y);
+                }
+            }
+            (*it)->getBallBody()->SetLinearVelocity(bv);
+        }
+    }
+}
+
+void GameLayer::freezeTimer() {
+    //    if (!gameIsPaused) {
+    //        if (freezeMode) {
+    //            if (ball->getFrozenFrameLasted() > 200) {
+    //                //				b2Vec2 currentVelocity =
+    //                //                ball->getBallBody()->GetLinearVelocity();
+    //                //				float previousSpeed = velocityBeforeFrozen.x
+    //                //                * velocityBeforeFrozen.x
+    //                //                + velocityBeforeFrozen.y * velocityBeforeFrozen.y;
+    //                //				float currentSpeed = currentVelocity.x * currentVelocity.x
+    //                //                + currentVelocity.y * currentVelocity.y;
+    //                //				float rate = sqrt(previousSpeed / currentSpeed);
+    //                //				b2Vec2 newVelocity = ball->getBallBody()->GetLinearVelocity();
+    //                //				newVelocity.x = currentVelocity.x * rate;
+    //                //				newVelocity.y = currentVelocity.y * rate;
+    //                //				ball->getBallBody()->SetLinearVelocity(newVelocity);
+    //                //				ball->setFrozenFrameTo0();
+    //                //				freezeMode = false;
+    //            } else {
+    //                //				ball->frozenFrameAddOne();
+    //            }
+    //
+    //        }
+    //
+    //    }
+}
+
+
+void GameLayer::pause(cocos2d::CCObject * pSender) {
+    
+    if (!gameIsPaused) {
+        gameIsPaused = true;
+        CCActionInterval *fade = CCFadeOut::create(0.3f);
+        myPaddle->runAction(fade);
+        myPaddle->pauseSchedulerAndActions();
+        list<Ball *>::iterator it = ballList.begin();
+        for( it; it != ballList.end(); it++ )
+        {
+            if( (*it) != NULL )
+            {
+                (*it)->runAction(fade);
+                (*it)->pauseSchedulerAndActions();
+                
+            }
+        }
+        
+        if (!itemList.empty()) {
+            
+            for (list<Item *>::iterator it = itemList.begin();
+                 it != itemList.end(); it++) {
+                (*it)->runAction(fade);
+                (*it)->pauseSchedulerAndActions();
+            }
+        }
+    }
+}
+
+
+void GameLayer::resume(cocos2d::CCObject * pSender) {
+    if (gameIsPaused) {
+        gameIsPaused = false;
+        CCActionInterval *fade = CCFadeIn::create(0.3f);
+        myPaddle->runAction(fade);
+        myPaddle->resumeSchedulerAndActions();
+        
+        list<Ball *>::iterator it = ballList.begin();
+        for( it; it != ballList.end(); it++ )
+        {
+            if( (*it) != NULL )
+            {
+                (*it)->runAction(fade);
+                (*it)->resumeSchedulerAndActions();
+            }
+        }
+        
+        for (list<Item *>::iterator it = itemList.begin();
+             it != itemList.end(); it++) {
+            (*it)->runAction(fade);
+            (*it)->resumeSchedulerAndActions();
+            
+        }
+    }
+}
+
+void GameLayer::setHighScore() {
+    if (ScoreData::getScore() > ScoreData::highScore) {
+        CCUserDefault::sharedUserDefault()->setIntegerForKey("HighScore",
+                                                             ScoreData::getScore());
+        ScoreData::highScore = ScoreData::getScore();
+        
+    }
+}
+
+void GameLayer::initTopBar() {
+    
+    //    CCSize size = CCDirector::sharedDirector()->getWinSize();
+    //
+    //    	//Pause Button
+    //    	CCMenuItemImage *pauseButtonImage = CCMenuItemImage::create(
+    //                                                                    "Pause.png", "Pause_Pressed.png", this,
+    //                                                                    menu_selector(GameLayer::pause));
+    //    	pauseButtonImage->setPosition(ccp(0, 0));
+    //    	pauseButton = CCMenu::create(pauseButtonImage, NULL);
+    //    	pauseButton->setPosition(ccp(size.width / 2, size.height/2+300));
+    //    	this->addChild(pauseButton, 300);
+    //
+    //	//Scores Label
+    //	scoresLabel = CCSprite::create("ScoresLabel.png");
+    //	scoresLabel->setPosition(ccp(size.width * 3 / 4, size.height + 50));
+    //	this->addChild(scoresLabel, 3);
+    //
+    //	//Scores
+    //	char temp[10];
+    //	sprintf(temp, "%d", ScoreData::getScore());
+    //	scores = CCLabelTTF::create(temp, "Designer-Notes.ttf", 65);
+    //	scores->setPosition(ccp(size.width * 3 / 4 + 80, size.height + 65));
+    //	this->addChild(scores, 3);
+}
+
+
+#pragma  mark   TOUCHES    METHODS
+
+void GameLayer::ccTouchesBegan(CCSet *pTouches, CCEvent *event) {
+    if (SettingLayer::getControlMode() == SettingLayer::DRAG) {
+        if (_mouseJoint != NULL)
+            return;
+        
+        CCTouch *myTouch = (CCTouch*) pTouches->anyObject();
+        CCPoint location = myTouch->getLocationInView();
+        
+        location = CCDirector::sharedDirector()->convertToGL(location);
+        b2Vec2 locationWorld = b2Vec2(location.x / PTM_RATIO ,location.y / PTM_RATIO);
+        
+        if (myPaddleFixture->TestPoint(locationWorld)) {
+            b2MouseJointDef md;
+            md.bodyA = groundBody;
+            md.bodyB = myPaddle->getMyPaddleBody();
+            md.target = locationWorld;
+            md.collideConnected = true;
+            md.maxForce = (2000.0f *2000.0f )* myPaddle->getMyPaddleBody()->GetMass();
+            _mouseJoint = (b2MouseJoint *) world->CreateJoint(&md);
+        }
+    } else if (SettingLayer::getControlMode() == SettingLayer::TOUCH) {
+        CCTouch *myTouch = (CCTouch*) pTouches->anyObject();
+        CCPoint touchPosition = myTouch->getLocationInView();
+        if (touchPosition.x < winSize.width / 2) {
+            b2Vec2 v = b2Vec2(-70, 0);
+            myPaddle->getMyPaddleBody()->SetLinearVelocity(v);
+        } else {
+            b2Vec2 v = b2Vec2(70, 0);
+            myPaddle->getMyPaddleBody()->SetLinearVelocity(v);
+        }
+    }
+}
+
+void GameLayer::ccTouchesMoved(CCSet *pTouches, CCEvent* event) {
+    if (SettingLayer::getControlMode() == SettingLayer::DRAG) {
+        
+        CCTouch* myTouch = (CCTouch*) pTouches->anyObject();
+        
+        CCPoint location = myTouch->getLocationInView();
+        location = CCDirector::sharedDirector()->convertToGL(location);
+        b2Vec2 locationWorld = b2Vec2(location.x / PTM_RATIO,
+                                      location.y / PTM_RATIO);
+        if (_mouseJoint)
+            _mouseJoint->SetTarget(locationWorld);
+    } else if (SettingLayer::getControlMode() == SettingLayer::TOUCH) {
+        CCTouch *myTouch = (CCTouch*) pTouches->anyObject();
+        CCPoint touchPosition = myTouch->getLocation();
+        if (touchPosition.x < winSize.width / 2) {
+            b2Vec2 v = b2Vec2(-30, 0);
+            myPaddle->getMyPaddleBody()->SetLinearVelocity(v);
+        } else {
+            b2Vec2 v = b2Vec2(30, 0);
+            myPaddle->getMyPaddleBody()->SetLinearVelocity(v);
+        }
+    }
+}
+
+void GameLayer::ccTouchesEnded(CCSet *pTouches, CCEvent* event) {
+    if (SettingLayer::getControlMode() == SettingLayer::DRAG) {
+        if (_mouseJoint)
+        {
+            world->DestroyJoint(_mouseJoint);
+            _mouseJoint = NULL;
+        }
+    } else if (SettingLayer::getControlMode() == SettingLayer::TOUCH) {
+        b2Vec2 v = b2Vec2(0, 0);
+        myPaddle->getMyPaddleBody()->SetLinearVelocity(v);
+    }
+}
+
+void GameLayer::didAccelerate(CCAcceleration* pAccelerationValue) {
+    
+    if (pAccelerationValue->x > 0.03) {
+        b2Vec2 v = b2Vec2(0.08 * SettingLayer::getSensitivity(), 0);
+        myPaddle->getMyPaddleBody()->SetLinearVelocity(v);
+    } else if (pAccelerationValue->x < -0.03) {
+        b2Vec2 v = b2Vec2(-0.08 * SettingLayer::getSensitivity(), 0);
+        myPaddle->getMyPaddleBody()->SetLinearVelocity(v);
+    } else {
+        b2Vec2 v = b2Vec2(0, 0);
+        myPaddle->getMyPaddleBody()->SetLinearVelocity(v);
+    }
+}
+
+#pragma  mark   COCOSBUILDER INITITIALIZATION
+void GameLayer::onNodeLoaded(cocos2d::CCNode * pNode,  cocos2d::extension::CCNodeLoader * pNodeLoader)
+{
+    CCLOG("on loaded called");
+    
+    initBackground();
+    initTopBar();
+    if (ScoreData::gameIsOver) {
+        ScoreData::setScoreTo0();
+    }
+    mAnimationManager =NULL;
+    BRICK_HEIGHT =60;
+    BRICK_WIDTH  = 30;
+    GameManager::sharedGameManager()->initialize();
+    ball = NULL;
+    freezeMode = false;
+    gameIsPaused = false;
+    gameIsEnded = false;
+    isSkweing = false;
+    ScoreData::gameIsOver = false;
+    newGame = true;
+    srand (time(NULL));
+    setKeypadEnabled(true);
+    setTouchPriority(kCCMenuHandlerPriority + 1);
+    
+    if (SettingLayer::getControlMode() == SettingLayer::GRAVITY) {
+        setAccelerometerEnabled(true);
+        setTouchEnabled(false);
+        
+    } else {
+        setTouchEnabled(true);
+        setAccelerometerEnabled(false);
+    }
+    buildGround();
+    buildMyPaddle();
+    buildBall();
+    restrictPaddleMovement();
+    buildBrickPaddle();
+    
+    schedule(schedule_selector(GameLayer::update));
+    //    schedule(schedule_selector(GameLayer::dropItem));
+    schedule(schedule_selector(GameLayer::paddleTimer));
+    schedule(schedule_selector(GameLayer::skewTimer));
+    
+    
+}
+
+SEL_CallFuncN GameLayer::onResolveCCBCCCallFuncSelector(CCObject * pTarget, const char* pSelectorName)
+{
+    return NULL;
+}
+
+SEL_MenuHandler GameLayer::onResolveCCBCCMenuItemSelector(CCObject * pTarget, const char * pSelectorName)
+{
+    CCB_SELECTORRESOLVER_CCMENUITEM_GLUE(this, "pause", GameLayer::pause);
+    CCB_SELECTORRESOLVER_CCMENUITEM_GLUE(this, "resume", GameLayer::resume);
+    
+    return NULL;
+}
+
+SEL_CCControlHandler GameLayer::onResolveCCBCCControlSelector(CCObject * pTarget, const char * pSelectorName)
+{
+    return NULL;
+}
+
+bool GameLayer::onAssignCCBMemberVariable(CCObject * pTarget, const char * pMemberVariableName, CCNode * pNode)
+{
+    //    CCB_MEMBERVARIABLEASSIGNER_GLUE(this, "paddleNode", CCNode *, this->paddleNode);
+    CCB_MEMBERVARIABLEASSIGNER_GLUE(this, "pauseButton",CCMenu *, this->pauseButton);
+    CCB_MEMBERVARIABLEASSIGNER_GLUE(this, "pauseBtn",CCMenuItemImage *, this->pauseBtn);
+    
+    
+    return false;
+}
+
+bool GameLayer::onAssignCCBCustomProperty(CCObject* pTarget, const char* pMemberVariableName, cocos2d::extension::CCBValue* pCCBValue)
+{
+    bool bRet = false;
+    return bRet;
+}
+
+
+#pragma  mark   POWER IMPLEMENTATION
+void GameLayer::enlargePaddle(Ball* ball) {
+    CCActionInterval* actionBy = CCScaleBy::create(0.5f, 2.0f, 1.0f);
+    b2Vec2 v ;
+    list<Ball *>::iterator it = ballList.begin();
+    for( it; it != ballList.end(); it++ )
+    {
+        if( (*it) != NULL )
+        {
+            v = (*it)->getBallBody()->GetLinearVelocity();
+        }
+    }
+    
+    CCRect myRect = myPaddle->boundingBox();
+    if (v.y > 0) {
+        
+        if (myRect.size.width <= myPaddle->getWidth()) {
+            myPaddle->runAction(actionBy);
+            if (myPaddle->getLengthState() == Paddle::shortPaddle) {
+                myPaddle->setLengthState(Paddle::normalPaddle);
+            } else if (myPaddle->getLengthState() == Paddle::normalPaddle) {
+                myPaddle->setLengthState(Paddle::longPaddle);
+            }
+        }
+    }
+}
+
+void GameLayer::shortenPaddle(Ball *ball) {
+    CCActionInterval* actionBy = CCScaleBy::create(0.2f, 0.5f, 1.0f);
+    b2Vec2 v ;
+    list<Ball *>::iterator it = ballList.begin();
+    for( it; it != ballList.end(); it++ )
+    {
+        if( (*it) != NULL )
+        {
+            v = (*it)->getBallBody()->GetLinearVelocity();
+        }
+    }
+    CCRect myRect = myPaddle->boundingBox();
+    if (v.y < 0) {
+        
+        if (myRect.size.width >= myPaddle->getWidth()) {
+            myPaddle->runAction(actionBy);
+            myPaddle->setFrameLastedTo0();
+            if (myPaddle->getLengthState() == Paddle::normalPaddle) {
+                myPaddle->setLengthState(Paddle::shortPaddle);
+            } else if (myPaddle->getLengthState() == Paddle::longPaddle) {
+                myPaddle->setLengthState(Paddle::normalPaddle);
+            }
+        }
+    }
+}
+
+void GameLayer::freezeBall() {
+    if (!freezeMode) {
+        
+        list<Ball *>::iterator it = ballList.begin();
+        for( it; it != ballList.end(); it++ )
+        {
+            if( (*it) != NULL )
+            {
+                b2Vec2 bv = (*it) ->getBallBody()->GetLinearVelocity();
+                velocityBeforeFrozen = bv;
+                bv.x = 0.2 * bv.x;
+                bv.y = 0.2 * bv.y;
+                (*it) ->getBallBody()->SetLinearVelocity(bv);
+                freezeMode = true;
+            }
+        }
+    }
+}
+
+void GameLayer::stealthBall() {
+    CCActionInterval* fadeOut = CCFadeOut::create(0.1f);
+    CCActionInterval* fadeOutBack = fadeOut->reverse();
+    list<Ball *>::iterator it = ballList.begin();
+    for( it; it != ballList.end(); it++ )
+    {
+        if( (*it) != NULL )
+        {
+            (*it)->runAction(CCSequence::createWithTwoActions(fadeOut, fadeOutBack));
+        }
+    }
+}
+
+void GameLayer::skewBall() {
+    isSkweing = true;
+    if (rand() & 1) {
+        skewDirectionIsRight = true;
+    } else {
+        skewDirectionIsRight = false;
+    }
+}
+
+void GameLayer::skewTimer() {
+    if (!gameIsPaused) {
+        if (isSkweing) {
+            list<Ball *>::iterator it = ballList.begin();
+            for( it; it != ballList.end(); it++ )
+            {
+                if( (*it) != NULL )
+                {
+                    if ((*it)->getSkewFrameLasted() > 30) {
+                        isSkweing = false;
+                        (*it)->setSkewFrameLastedTo0();
+                    } else {
+                        b2Vec2 v = (*it)->getBallBody()->GetLinearVelocity();
+                        
+                        b2Vec2 *f;
+                        if (skewDirectionIsRight) {
+                            f = new b2Vec2(-v.y, v.x);
+                        } else {
+                            f = new b2Vec2(v.y, -v.x);
+                        }
+                        
+                        (*f) *= 15;
+                        (*it)->getBallBody()->ApplyForceToCenter(*f);
+                        (*it)->skewFrameAddOne();
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+void GameLayer::reverseBallXVelocity() {
+    list<Ball *>::iterator it = ballList.begin();
+    for( it; it != ballList.end(); it++ )
+    {
+        if( (*it) != NULL )
+        {
+            b2Vec2 v = (*it)->getBallBody()->GetLinearVelocity();
+            v.x = -v.x;
+            (*it)->getBallBody()->SetLinearVelocity(v);
+        }
+    }
+}
+
+void GameLayer::reverseBallYVelocity() {
+    list<Ball *>::iterator it = ballList.begin();
+    for( it; it != ballList.end(); it++ )
+    {
+        if( (*it) != NULL )
+        {
+            b2Vec2 v = (*it)->getBallBody()->GetLinearVelocity();
+            v.y = -v.y;
+            (*it)->getBallBody()->SetLinearVelocity(v);
+        }
+    }
+}

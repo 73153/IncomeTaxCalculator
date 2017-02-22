@@ -1,0 +1,72 @@
+#include "Brick.h"
+#define PTM_RATIO 32
+
+Brick::Brick(void)
+{
+	m_body = NULL;
+	m_sprite = NULL;
+}
+
+
+Brick::~Brick(void)
+{
+}
+
+void Brick::Init(cocos2d::CCNode* layer, b2World* world,CCSprite *spr,int brickLife)
+{
+	m_world = world;
+	m_layer = layer;
+    m_sprite = spr;
+
+	m_sprite->setTag(2);
+    this->setColor(m_sprite, 1);
+
+	b2BodyDef ballDef;
+	ballDef.type = b2_staticBody;
+	ballDef.position.Set((m_sprite->getPositionX()) / PTM_RATIO,(m_sprite->getPositionY() )/ PTM_RATIO);
+	ballDef.userData = m_sprite;
+	m_body = world->CreateBody( &ballDef );
+
+	
+	b2PolygonShape BrickShape;
+	BrickShape.SetAsBox( ( m_sprite->boundingBox().size.width / 2.0f ) / PTM_RATIO, 
+		( m_sprite->boundingBox().size.height / 2.0f ) / PTM_RATIO );
+
+	b2FixtureDef ballShapeDef;
+	ballShapeDef.shape = &BrickShape;
+	ballShapeDef.density = 1.0f;
+	ballShapeDef.friction = 0.2f;
+	ballShapeDef.restitution = 0.8f;
+	m_body->CreateFixture( &ballShapeDef );
+}
+
+void Brick::UnInit()
+{
+	m_layer->removeChild( m_sprite, true );
+	m_world->DestroyBody(m_body);
+}
+
+void Brick::setColor(CCSprite *spr,int life){
+    _life = life;
+//    switch (_life) {
+//        case 1:
+//           spr->setColor(ccc3(1,0,0));
+//            break;
+//        case 2:
+//            spr->setColor(ccc3(1,1,0));
+//            break;
+//        case 3:
+//            spr->setColor(ccc3(0,0,1));
+//            break;
+//    }
+}
+
+void Brick::Update()
+{
+	if( m_body != NULL && m_sprite != NULL )
+	{
+		m_sprite->setPosition(ccp(m_body->GetPosition().x * PTM_RATIO,
+                                    m_body->GetPosition().y * PTM_RATIO));
+		m_sprite->setRotation(-1 * CC_RADIANS_TO_DEGREES(m_body->GetAngle()));
+	}
+}

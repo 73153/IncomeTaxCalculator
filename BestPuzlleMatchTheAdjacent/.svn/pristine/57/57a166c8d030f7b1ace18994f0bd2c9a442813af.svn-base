@@ -1,0 +1,155 @@
+#include "CollisionDetection.h"
+//
+
+//  CollisionDetection.cpp
+
+//  Created by Mudit Jaju on 30/08/13.
+
+//
+
+//  SINGLETON class for checking Pixel Based Collision Detection
+
+
+
+#include "CollisionDetection.h"
+
+// Singleton Instance set to NULL initially
+
+CollisionDetection*CollisionDetection::instance=NULL;
+
+
+
+// Handle to get Singleton Instance
+
+CollisionDetection*CollisionDetection::GetInstance(){
+
+	if(instance==NULL){
+
+		instance=new CollisionDetection();
+
+	}
+
+	return instance;
+
+}
+
+
+
+// Private Constructor being called from within the GetInstance handle
+
+CollisionDetection::CollisionDetection(){
+
+	// Code below to setup shaders for use in Cocos2d-x
+
+	glProgram=new CCGLProgram();
+
+	glProgram->retain();
+
+	glProgram->initWithVertexShaderFilename("SolidVertexShader.vsh","SolidColorShader.fsh");
+
+	glProgram->addAttribute(kCCAttributeNamePosition,kCCVertexAttrib_Position);
+
+	glProgram->addAttribute(kCCAttributeNameTexCoord,kCCVertexAttrib_TexCoords);
+
+	glProgram->link();
+
+	glProgram->updateUniforms();
+
+	glProgram->use();
+
+	uniformColorRed=glGetUniformLocation(glProgram->getProgram(),"u_color_red");
+
+	uniformColorBlue=glGetUniformLocation(glProgram->getProgram(),"u_color_blue");
+
+	// A large buffer created and re-used again and again to store glReadPixels data
+
+//	buffer=(ccColor4B *)malloc(sizeof(ccColor4B)*10000);
+    
+
+}
+CollisionDetection::~CollisionDetection(){
+}
+
+bool CollisionDetection::areTheSpritesColliding(cocos2d::CCSprite*spr1,cocos2d::CCSprite*spr2,bool pp,CCRenderTexture*_rt){
+    
+    bool isColliding = false;
+    CCRect intersection;
+    CCRect r1 = spr1->boundingBox();
+    CCRect r2 = spr2->boundingBox();
+    
+    
+    
+    // Look for simple bounding box collision
+    if (r1.intersectsRect(r2)) {
+        // If we're not checking for pixel perfect collisions, return true
+        if (!pp) {
+            return true;
+        }
+        
+        float tempX;
+        float tempY;
+        float tempWidth;
+        float tempHeight;
+        
+        if (r1.getMaxX() > r2.getMinX()) {
+            tempX = r2.getMinX();
+            tempWidth = r1.getMaxX() - r2.getMinX();
+        } else {
+            tempX = r1.getMinX();
+            tempWidth = r2.getMaxX() - r1.getMinX();
+        }
+        
+        if (r1.getMinY() < r2.getMaxY()) {
+            tempY = r1.getMinY();
+            tempHeight = r2.getMaxY() - r1.getMinY();
+        } else {
+            tempY = r2.getMinY();
+            tempHeight = r1.getMaxY() - r2.getMinY();
+        }
+        
+        intersection = CCRectMake(tempX * CC_CONTENT_SCALE_FACTOR(), tempY  * CC_CONTENT_SCALE_FACTOR(), tempWidth * CC_CONTENT_SCALE_FACTOR(), tempHeight * CC_CONTENT_SCALE_FACTOR());
+        
+        unsigned int x = intersection.origin.x;
+        unsigned int y = intersection.origin.y;
+        unsigned int w = intersection.size.width;
+        unsigned int h = intersection.size.height;
+        
+        unsigned int numPixels = w * h;
+        
+        if (numPixels<=0) return false;
+        
+        // Draw into the RenderTexture
+        CCSize size = CCDirector::sharedDirector()->getWinSize();
+        CCRenderTexture *rt = CCRenderTexture::create(size.width/2, size.height/2, kCCTexture2DPixelFormat_RGBA8888);
+        rt->beginWithClear(0, 0, 0, 0);
+        
+        // Render both sprites: first one in RED and second one in GREEN
+        glColorMask(1, 0, 0, 1);
+        spr1->visit();
+        glColorMask(0, 1, 0, 1);
+        spr2->visit();
+        glColorMask(1, 1, 1, 1);
+        
+        // Get color values of intersection area
+        ccColor4B *buffer = (ccColor4B *)malloc( sizeof(ccColor4B) * numPixels );
+        glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+        
+        rt->end();
+        
+        // Read buffer
+        unsigned int step = 1;
+        for(unsigned int i=0; i<numPixels; i+=step) {
+            ccColor4B color = buffer[i];
+            //CCLog("Pixel color: %d, %d, %d", color.r, color.g, color.b);
+            if (color.r > 0 && color.g > 0) {
+                isColliding = true;
+                break;
+            }
+        }
+        
+        // Free buffer memory
+        free(buffer);
+    }
+    
+    return isColliding;
+}

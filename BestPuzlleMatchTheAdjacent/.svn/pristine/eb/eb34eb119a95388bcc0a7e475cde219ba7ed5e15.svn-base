@@ -1,0 +1,28 @@
+#ifndef __Brick_H__
+#define __Brick_H__
+#include "Box2D.h"
+#include "cocos2d.h"
+
+using namespace cocos2d;
+class Brick: public cocos2d::CCSprite
+{
+public:
+	Brick(void);
+	~Brick(void);
+    CC_SYNTHESIZE(int, m_score, Score);
+    CC_SYNTHESIZE_READONLY(int, _life, Life);
+
+	void Init(cocos2d::CCNode* layer, b2World* world,CCSprite *spr,int brickLife);
+	void UnInit();
+
+	void Update();
+	b2Body* m_body;
+    void setColor(CCSprite *spr,int _life);
+
+private:
+	cocos2d::CCSprite* m_sprite;
+	
+	b2World* m_world;
+	cocos2d::CCNode* m_layer;
+};
+#endif

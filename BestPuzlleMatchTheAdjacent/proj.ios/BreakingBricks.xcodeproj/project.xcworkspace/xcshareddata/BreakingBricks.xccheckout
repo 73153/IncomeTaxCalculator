@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>95AB53D9-4F3F-4AFA-892D-B08B27A4F30A</string>
+	<key>IDESourceControlProjectName</key>
+	<string>BreakingBricks</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>E5A4C66E-03C6-4EE1-B18E-D2362C88056B</key>
+		<string>http://192.168.10.6/svn/breakingbricks</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>proj.ios/BreakingBricks.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>E5A4C66E-03C6-4EE1-B18E-D2362C88056B</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectRepositoryRootDictionary</key>
+	<dict>
+		<key>E5A4C66E-03C6-4EE1-B18E-D2362C88056B</key>
+		<string>http://192.168.10.6/svn/breakingbricks</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>http://192.168.10.6/svn/breakingbricks/proj.ios/BreakingBricks.xcodeproj</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>E5A4C66E-03C6-4EE1-B18E-D2362C88056B</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.subversion</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>E5A4C66E-03C6-4EE1-B18E-D2362C88056B</string>
+			<key>IDESourceControlWCCName</key>
+			<string>BrickBreak(Project)</string>
+		</dict>
+	</array>
+</dict>
+</plist>

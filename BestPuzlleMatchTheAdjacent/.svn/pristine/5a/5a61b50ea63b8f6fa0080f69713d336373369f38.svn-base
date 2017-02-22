@@ -1,0 +1,31 @@
+#include "ContactListener.h"
+
+ContactListener::ContactListener()
+{
+}
+ 
+ContactListener::~ContactListener()
+{
+}
+
+
+void ContactListener::BeginContact( b2Contact* contact )
+{
+	ContactHolder holder = ContactHolder();
+	holder.fixtureA = contact->GetFixtureA();
+	holder.fixtureB = contact->GetFixtureB();
+	contacts.push_back(holder);
+}
+
+void ContactListener::EndContact( b2Contact* contact )
+{
+	ContactHolder holder = ContactHolder();
+	holder.fixtureA = contact->GetFixtureA();
+	holder.fixtureB = contact->GetFixtureB();
+	std::vector<ContactHolder>::iterator pos;
+	pos = std::find( contacts.begin(), contacts.end(), holder);
+	if(pos != contacts.end() )
+	{
+		contacts.erase(pos);
+	}
+}

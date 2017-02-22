@@ -1,0 +1,22 @@
+
+#include "DoubleItem.h"
+
+DoubleItem::DoubleItem() {
+	function = "double";
+}
+
+DoubleItem::~DoubleItem() {
+	
+}
+
+DoubleItem* DoubleItem::createDoubleItem() {
+
+	DoubleItem* doubleItem = new DoubleItem();
+	if (doubleItem
+			&& doubleItem->initWithFile("doubleItem.png")) {
+		return doubleItem;
+	}
+	CC_SAFE_DELETE(doubleItem);
+	return NULL;
+}
+

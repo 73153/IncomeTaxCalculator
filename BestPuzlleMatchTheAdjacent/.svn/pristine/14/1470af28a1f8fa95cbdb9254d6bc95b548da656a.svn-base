@@ -1,0 +1,23 @@
+
+
+#include "ReverseXItem.h"
+
+ReverseXItem::ReverseXItem() {
+	function = "reverseX";
+
+}
+
+ReverseXItem::~ReverseXItem() {
+}
+
+ReverseXItem* ReverseXItem::createReverseXItem() {
+
+	ReverseXItem* reverseXItem = new ReverseXItem();
+	if (reverseXItem
+			&& reverseXItem->initWithFile("reverseXItem.png")) {
+
+		return reverseXItem;
+	}
+	CC_SAFE_DELETE(reverseXItem);
+	return NULL;
+}

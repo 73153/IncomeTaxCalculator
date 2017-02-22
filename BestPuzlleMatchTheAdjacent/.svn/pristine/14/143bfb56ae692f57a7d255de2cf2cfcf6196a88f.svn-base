@@ -1,0 +1,45 @@
+/*
+ * BallContactListener.cpp
+ *
+ *  Created on: Sep 28, 2013
+ *      Author: daniel
+ */
+
+#include "BallContactListener.h"
+#include "cocos2d.h"
+#include "GameManager.h"
+using namespace cocos2d;
+
+void BallContactListener::BeginContact(b2Contact* contact) {
+	b2Body* bodyA = contact->GetFixtureA()->GetBody();
+	b2Body* bodyB = contact->GetFixtureB()->GetBody();
+	if (bodyA->GetUserData() != NULL && bodyB->GetUserData() != NULL) {
+		CCSprite* spriteA = (CCSprite*) bodyA->GetUserData();
+		CCSprite* spriteB = (CCSprite*) bodyB->GetUserData();
+       // CCLog("spriteA->getTag() %d and spriteB->getTag() %d",spriteA->getTag(),spriteB->getTag() == 1);
+        if(spriteB->getTag() == 0 && spriteA->getTag() == 2)
+        {
+            spriteA->setVisible(false);
+            spriteA->removeFromParent();
+
+            CCLOG("Body A");
+            GameManager::sharedGameManager()->getenemyPaddleArray()->removeObject(spriteA);
+
+        }
+		if ( spriteB->getTag() == 0 && spriteA->getTag() == 2)
+            {
+
+              
+            }
+            else if(spriteA->getTag() == 1 && spriteB->getTag() == 0) {
+                //CCLOG("Body B");
+//                 spriteA->removeFromParent();
+			ScoreData::defendScore();
+        }
+	}
+}
+
+void BallContactListener::EndContact(b2Contact* contact) {
+
+}
+

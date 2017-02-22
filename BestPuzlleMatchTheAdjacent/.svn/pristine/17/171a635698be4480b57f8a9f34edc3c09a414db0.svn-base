@@ -1,0 +1,24 @@
+
+
+#include "FreezeItem.h"
+
+FreezeItem::FreezeItem() {
+	function = "freeze";
+
+}
+
+FreezeItem::~FreezeItem() {
+	
+}
+
+FreezeItem* FreezeItem::createFreezeItem() {
+
+	FreezeItem* freezeItem = new FreezeItem();
+	if (freezeItem
+			&& freezeItem->initWithFile("fire.png")) {
+		return freezeItem;
+	}
+	CC_SAFE_DELETE(freezeItem);
+	return NULL;
+
+}

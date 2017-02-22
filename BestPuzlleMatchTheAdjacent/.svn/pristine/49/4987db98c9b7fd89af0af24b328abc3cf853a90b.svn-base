@@ -1,0 +1,73 @@
+
+
+#include "ScoreLayer.h"
+
+ScoreLayer::ScoreLayer() {
+
+}
+
+ScoreLayer::~ScoreLayer() {
+}
+
+CCScene* ScoreLayer::scene() {
+	CCScene *scene = CCScene::create();
+	ScoreLayer* layer = ScoreLayer::create();
+	scene->addChild(layer);
+	return scene;
+}
+
+bool ScoreLayer::init() {
+	if (!CCLayer::init())
+		return false;
+	setKeypadEnabled(true);
+	setTouchEnabled(true);
+	setTouchPriority(kCCMenuHandlerPriority + 1);
+	setTouchMode (kCCTouchesOneByOne);
+
+	this->initBackground();
+	this->initBackButton();
+	this->initHighScore();
+	return true;
+}
+
+void ScoreLayer::initBackground() {
+	CCSize size = CCDirector::sharedDirector()->getWinSize();
+	CCSprite* settingLayerBackground = CCSprite::create(
+			"ScoreSceneBackground.png");
+	settingLayerBackground->setPosition(ccp(size.width / 2, size.height / 2));
+	this->addChild(settingLayerBackground, 0);
+}
+
+void ScoreLayer::initBackButton() {
+	CCSize size = CCDirector::sharedDirector()->getWinSize();
+
+	//Pause Button
+	CCMenuItemImage *backButtonImage = CCMenuItemImage::create(
+			"Back.png", "Back_Pressed.png", this,
+			menu_selector(ScoreLayer::backButtonPressed));
+	backButtonImage->setPosition(ccp(0, 0));
+	CCMenu* backButton = CCMenu::create(backButtonImage, NULL);
+	backButton->setPosition(ccp(size.width / 2, size.height - 1019));
+	this->addChild(backButton, 2);
+}
+
+void ScoreLayer::keyBackClicked() {
+	CCDirector::sharedDirector()->popScene();
+}
+
+void ScoreLayer::backButtonPressed() {
+	CCDirector::sharedDirector()->popScene();
+}
+
+void ScoreLayer::initHighScore() {
+	CCSize size = CCDirector::sharedDirector()->getWinSize();
+
+	char temp[10];
+	sprintf(temp, "%d", ScoreData::highScore);
+	highScore = CCLabelTTF::create(temp, "Designer-Notes.ttf", 150);
+	highScore->setColor(ccc3(158, 93, 161));
+
+	highScore->setPosition(ccp(size.width / 2, size.height / 2 - 100));
+	this->addChild(highScore, 1);
+
+}

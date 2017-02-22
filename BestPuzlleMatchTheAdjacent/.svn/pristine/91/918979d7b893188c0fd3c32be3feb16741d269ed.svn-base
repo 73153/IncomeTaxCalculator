@@ -1,0 +1,22 @@
+
+
+#include "ShortenItem.h"
+
+ShortenItem::ShortenItem() {
+	function = "shorten";
+
+}
+
+ShortenItem::~ShortenItem() {
+}
+
+ShortenItem* ShortenItem::createShortenItem() {
+
+	ShortenItem* shortenItem = new ShortenItem();
+	if (shortenItem
+			&& shortenItem->initWithFile("shortenItem.png")) {
+		return shortenItem;
+	}
+	CC_SAFE_DELETE(shortenItem);
+	return NULL;
+}

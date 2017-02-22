@@ -1,0 +1,22 @@
+
+#ifndef BreakingBricks_Cosntant_h
+#define BreakingBricks_Cosntant_h
+
+static int redBrickLevel1[]  = {17,20,32,50,64,78,89,90,100,107,116,118,125,134,140};
+static int blackBrickLevel1[] = {11,15,23,34,35,45,56,75,87,98,101,113,120};
+
+static int redBrickLevel2[]  = {17,20,32,50,64,78,89,90,100,107,116,118,125,134,140};
+static int blackBrickLevel2[] = {11,15,23,34,35,45,56,75,87,98,101,113,120};
+
+static int redBrickLevel3[]  = {17,20,32,50,64,78,89,90,100,107,116,118,125,134,140};
+static int blackBrickLevel3[] = {11,15,23,34,35,45,56,75,87,98,101,113,120};
+
+static int redBrickLevel4[]  = {17,20,32,50,64,78,89,90,100,107,116,118,125,134,140};
+static int blackBrickLevel4[] = {11,15,23,34,35,45,56,75,87,98,101,113,120};
+
+static int redBrickLevel5[]  = {17,20,32,50,64,78,89,90,100,107,116,118,125,134,140};
+static int blackBrickLevel5[] = {11,15,23,34,35,45,56,75,87,98,101,113,120};
+
+
+
+#endif

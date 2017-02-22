@@ -1,0 +1,417 @@
+
+#include "GameManager.h"
+#include  "../GameManager/common_function.h"
+#include "../SoundManager/SoundManager.h"
+#include "../GameScreen/GameLayer.h"
+#include "../GameScreen/GameLayerLoader.h"
+#include "../Shapes/ShapeLayer.h"
+#include "../Shapes/ShapeLayerLoader.h"
+
+using namespace std;
+using namespace cocos2d;
+CCScene* GameManager::get_scene_at(int nIndex)
+{
+    this->setcurrent_scene(nIndex);
+    switch(nIndex)
+    {
+        case 1:
+        {
+            current_scene=nIndex;
+            CCLog("index:%d",nIndex);
+            return  GameManager::sharedGameManager()->get_scene("Level3.ccbi","GameLayer",GameLayerLoader::loader(), CCScene::create(),false,false);
+        }
+        case 2:
+        {
+            current_scene=nIndex;
+            return  GameManager::sharedGameManager()->get_scene("Level2.ccbi","GameLayer",GameLayerLoader::loader(), CCScene::create(),false,false);
+            CCLog("index:%d",nIndex);
+         
+        }
+        case 3:
+        {
+            current_scene=nIndex;
+            return  GameManager::sharedGameManager()->get_scene("Level3.ccbi","GameLayer",GameLayerLoader::loader(), CCScene::create(),false,false);
+            CCLog("index:%d",nIndex);
+
+        }
+        case 4:
+        {
+            current_scene=nIndex;
+            return  GameManager::sharedGameManager()->get_scene("Level4.ccbi","GameLayer",GameLayerLoader::loader(), CCScene::create(),false,false);
+            CCLog("index:%d",nIndex);
+          
+            }
+        case 5:
+        {
+            current_scene=nIndex;
+            return  GameManager::sharedGameManager()->get_scene("Level5.ccbi","GameLayer",GameLayerLoader::loader(), CCScene::create(),false,false);
+            CCLog("index:%d",nIndex);
+
+        }
+        case 6:
+        {
+            current_scene=nIndex;
+            return  GameManager::sharedGameManager()->get_scene("Level6.ccbi","GameLayer",GameLayerLoader::loader(), CCScene::create(),false,false);
+            CCLog("index:%d",nIndex);
+         
+        }
+        case 7:
+        {
+            current_scene=nIndex;
+            return  GameManager::sharedGameManager()->get_scene("Level7.ccbi","GameLayer",GameLayerLoader::loader(), CCScene::create(),false,false);
+            CCLog("index:%d",nIndex);
+           
+        }
+//        case 8:
+//        {
+//            current_scene=nIndex;
+//            CCLog("index:%d",nIndex);
+//      
+//        }
+//        case 9:
+//        {
+//            current_scene=nIndex;
+//            CCLog("index:%d",nIndex);
+//      
+//        }
+//        case 10:
+//        {
+//            current_scene=nIndex;
+//            CCLog("index:%d",nIndex);
+//            }
+//        case 11:
+//        {
+//            current_scene=nIndex;
+//            CCLog("index:%d",nIndex);
+//        
+//        }
+//        case 12:
+//        {
+//            current_scene=nIndex;
+//            CCLog("index:%d",nIndex);
+//        }
+//        case 13:
+//        {
+//            current_scene=nIndex;
+//            CCLog("index:%d",nIndex);
+//        
+//        }
+//        case 14:
+//        {
+//            current_scene=nIndex;
+//            CCLog("index:%d",nIndex);
+//  
+//        }
+//        case 15:
+//        {
+//            current_scene=nIndex;
+//            CCLog("index:%d",nIndex);
+// 
+//        }
+//        case 16:
+//        {
+//            current_scene=nIndex;
+//            CCLog("index:%d",nIndex);
+//        
+//        }
+//        case 17:
+//        {
+//            current_scene=nIndex;
+//            CCLog("index:%d",nIndex);
+//            switch (this->get_devise_resolution())
+//            {
+//                case 1:
+//                    break;
+//                case 2:
+//                if (CCDirector::sharedDirector()->getWinSize().width==1136)
+//                {
+//                }
+//                else
+//                {
+//                }
+//                    break;
+//                case 3:
+//                {
+////                    #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+////                        return GameManager::sharedGameManager()->get_scene("StoryCCBFiles/Scene17Layer_iphone.ccbi","Scene17Layer" ,Scene17LayerLoader::loader(), CCScene::create(),true,true);
+////                    #elif (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+////                          return GameManager::sharedGameManager()->get_scene("StoryCCBFiles/Scene17Layer_iphone.ccbi","Scene17Layer" ,Scene17LayerLoader::loader(), CCScene::create(),true,true);
+////                   #endif
+//                  
+//                }
+//                    break;
+//                case 4:
+//                    break;
+//                default:
+//                    break;
+//            }
+//        }
+//        case 18:
+//        {
+//            current_scene=nIndex;
+//            CCLog("index:%d",nIndex);
+//            switch (this->get_devise_resolution())
+//            {
+//                case 1:
+//                    break;
+//                case 2:
+////                    if (CCDirector::sharedDirector()->getWinSize().width==1136)
+////                    {
+////                    }
+////                    else
+////                    {
+////                        CCLOG("iphone 4 size");
+////                    }
+////                    break;
+//                    
+//                case 3:
+////                    #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+////                    #elif (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+////                    #endif
+////                            break;
+//
+//                case 4:
+//              
+//                    break;
+//                default:
+//                    break;
+//            }
+//        }
+//        case 19:
+//        {
+//            current_scene=nIndex;
+//            CCLog("index:%d",nIndex);
+//        }
+        default:
+        {
+     
+        }
+    }
+    return NULL;
+}
+//All static variables need to be defined in the .cpp file
+//I've added this following line to fix the problem
+GameManager* GameManager::m_mySingleton = NULL;
+GameManager::GameManager():current_scene(0),current_layer(NULL),enemyPaddleArray(NULL)
+{
+ 
+}
+GameManager* GameManager::sharedGameManager()
+{
+    //If the singleton has no instance yet, create one
+    if(NULL == m_mySingleton)
+    {
+        //Create an instance to the singleton
+        m_mySingleton = new GameManager();
+    }
+    //Return the singleton object
+    return m_mySingleton;
+}
+void GameManager::initialize()
+{
+    enemyPaddleArray = CCArray::create();
+    enemyPaddleArray->retain();
+    
+        this->mutedNarrator=CCUserDefault::sharedUserDefault()->getBoolForKey("mutedNarrator");
+        this->mutedFX=CCUserDefault::sharedUserDefault()->getBoolForKey("mutedFX");
+        this->points=CCUserDefault::sharedUserDefault()->getIntegerForKey("BREAKPOINTS");
+        this->level=CCUserDefault::sharedUserDefault()->getIntegerForKey("BREAKLEVEL");
+        if (level == 0)
+        {
+            level = 1;
+            CCUserDefault::sharedUserDefault()->setIntegerForKey("BREAKLEVEL", level);
+            CCUserDefault::sharedUserDefault()->flush();
+            
+        }
+//        this->read_data();
+}
+void GameManager::read_data()
+{
+//    std::string writablePath_temp = CCFileUtils::sharedFileUtils()->getWritablePath();
+//    std::string fullPath = writablePath_temp + "text.plist";
+//    if (CCFileUtils::sharedFileUtils()->isFileExist(fullPath))
+//    {
+//        CCDictionary *dict=CCDictionary::createWithContentsOfFile(fullPath.c_str());
+//        dict->retain();
+//       // starStoreElements=CCArray::create();
+//        CCLOG("%d",dict->allKeys()->count());
+//    }
+//    else
+//    {
+//        CCDictionary *root = CCDictionary::create();
+//        if(root->writeToFile(fullPath.c_str()))
+//        {
+//           CCLog("see the plist file at %s", fullPath.c_str());
+//        }
+//        else
+//        {
+//           CCLog("write plist file failed");
+//       }
+//        CCLog("external file path = %s", fullPath.c_str());
+//    }
+}
+#pragma mark -
+#pragma mark Scene manager
+#pragma mark -
+CCScene* GameManager::get_scene(const char *pCCBFilename,const char *pCCNodename,CCNodeLoader *pCCNodeLoader,CCObject *objowner,bool hasfooter,bool hasheader)
+{
+    CCNode *layer = NULL;
+    CCLOG("pCCBFilename %s",pCCBFilename);
+    map<string, CCNodeLoader*> loader_map;
+    loader_map.insert(make_pair(pCCNodename, pCCNodeLoader));
+//    CCString *str_clsname = CCString::createWithFormat("%s",pCCBFilename);
+//    CCString *str2 = CCString::createWithFormat("%s","GameLayer.ccbi");
+//    if(str_clsname->isEqual(str2))
+//    {
+//        loader_map.insert(make_pair("ShapeLayer", ShapeLayerLoader::loader()));
+//
+//    }
+
+    layer = loadCCBFile(pCCBFilename, loader_map);
+
+    current_layer=(CCNode*)layer;
+    /* Read a ccbi file. */
+    CCScene * scene = CCScene::create();
+    if(layer != NULL)
+    {
+        scene->addChild(layer);
+    }
+
+    return scene;
+}
+bool GameManager::gotoNextScene()
+{
+    int kscene=this->getcurrent_scene().getValue();
+    GameManager::sharedGameManager()->remove_unused_data();
+
+    CCScene *splash_scene=this->get_scene_at(++kscene);
+    //push transition...
+//    if (kscene==11||kscene==18||kscene==19)
+//        CCDirector::sharedDirector()->replaceScene(CCTransitionSlideInR::create(0.5f, splash_scene));
+//    else
+//        CCDirector::sharedDirector()->replaceScene(CCTransitionPageTurn::create(0.5f, splash_scene, false));
+    return true;
+}
+bool GameManager::gotoPreviousScene()
+{
+    int kscene=this->getcurrent_scene().getValue();
+    GameManager::sharedGameManager()->remove_unused_data();
+
+    CCScene *splash_scene=this->get_scene_at(--kscene);
+    
+//    if (kscene==10||kscene==18||kscene==17)
+//        CCDirector::sharedDirector()->replaceScene(CCTransitionSlideInL::create(0.5f, splash_scene));
+//    else
+//    CCDirector::sharedDirector()->replaceScene(CCTransitionPageTurn::create(0.5f, splash_scene, true));
+//    
+    
+    return false;
+}
+bool GameManager::gotoScene(CCInteger index_scene)
+{
+    CCLog("Go to scene");
+    int kscene=index_scene.getValue();
+    
+    GameManager::sharedGameManager()->remove_unused_data();
+
+    SoundManager::sharedSoundManager()->loadSondEffect(kscene);
+    CCLog("Sound Loaded");
+    CCScene *splash_scene=this->get_scene_at(kscene);
+    CCLog("Get Scene");
+    CCDirector::sharedDirector()->replaceScene(CCTransitionFlipX::create(0.5f, splash_scene));
+
+    return true;
+}
+
+#pragma mark -
+#pragma mark utilities methods
+#pragma mark -
+bool GameManager::isNodeAtPoint(cocos2d::CCNode* node, cocos2d::CCPoint& touchLocation)
+{
+    CCPoint nodePoint = node->convertToNodeSpace(touchLocation);
+    CCRect rect = CCRectMake(0, 0, node->getContentSize().width, node->getContentSize().height);
+    return rect.containsPoint(nodePoint);
+}
+int GameManager::get_devise_resolution()
+{
+    return resolution_type;
+}
+void GameManager::set_devise_resolution(int resolution)
+{
+    resolution_type=resolution;
+}
+CCArray* GameManager::shuffle_array(CCArray *pArray, unsigned int nLen)
+{
+    int i;
+    for( i = nLen - 1; i >= 0; i-- )
+    {
+        unsigned int j = rand() % (i+1);
+        CCObject *tempobj = pArray->objectAtIndex(i);
+        pArray->exchangeObject(tempobj, pArray->objectAtIndex(j));
+    }
+    return pArray;
+}
+bool GameManager::isTouchOnArea(CCPoint touch ,CCPoint center,float width,float height)
+{
+    if (CCRectMake(center.x-width/2, center.y-height/2, width, height).containsPoint(touch))
+    {
+        return true;
+    }
+    return false;
+}
+bool GameManager::isTouchOnAreaFromGimp(CCPoint touch ,CCPoint center,float width,float height)
+{
+    CCSize screenSize = CCDirector::sharedDirector()->getWinSize();
+	if(CCRectMake(center.x, screenSize.height - center.y - height, width, height).containsPoint(touch))
+		return true;
+	else
+        return false;
+   
+}
+
+void GameManager::remove_unused_data()
+{
+    SoundManager::sharedSoundManager()->stopAllEffect();
+    int currentScene = this->getcurrent_scene().getValue();
+    SoundManager::sharedSoundManager()->unLoadSoundEffect(currentScene);
+    SoundManager::sharedSoundManager()->stopNarrator();
+    SoundManager::sharedSoundManager()->stopBackgroundSound();
+    if(current_layer==NULL)
+        return;
+    CCLayer *layer=(CCLayer*)this->current_layer;
+    layer->setTouchEnabled(false);
+    this->current_layer->stopAllActions();
+    this->current_layer->unscheduleAllSelectors();
+    this->current_layer->removeAllChildrenWithCleanup(true);
+    CCTextureCache::sharedTextureCache()->dumpCachedTextureInfo();
+    CCAnimationCache::purgeSharedAnimationCache();
+    CCTextureCache::sharedTextureCache()->removeUnusedTextures();
+    CCSpriteFrameCache::sharedSpriteFrameCache()->removeUnusedSpriteFrames();
+    CCDirector::sharedDirector()->purgeCachedData();
+    CCTextureCache::sharedTextureCache()->dumpCachedTextureInfo();
+}
+#pragma mark -
+#pragma mark StoreElement
+#pragma mark -
+void GameManager::saveMutedFX(bool mute)
+{
+    this->mutedFX = mute;
+    CCUserDefault::sharedUserDefault()->setBoolForKey("mutedFX", mute);
+    CCUserDefault::sharedUserDefault()->flush();
+}
+void GameManager::saveMutedNarrator(bool mute)
+{
+    this->mutedNarrator = mute;
+    CCUserDefault::sharedUserDefault()->setBoolForKey("mutedNarrator", mute);
+    CCUserDefault::sharedUserDefault()->flush();
+}
+void GameManager::AddPoints(int morePoints)
+{
+    points += morePoints;
+    if (points >= 99999)
+    {
+        points = 99999;
+    }
+    CCUserDefault::sharedUserDefault()->setIntegerForKey("BREAKPOINTS",points);
+    CCUserDefault::sharedUserDefault()->flush();
+}

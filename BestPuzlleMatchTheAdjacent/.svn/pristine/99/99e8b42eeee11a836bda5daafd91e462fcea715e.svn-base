@@ -1,0 +1,98 @@
+
+
+#ifndef Bullet_H_
+#define Bullet_H_
+#include "cocos2d.h"
+#include "Box2D.h"
+#include <cmath>
+#define PTM_RATIO 32.0
+
+using namespace cocos2d;
+
+struct bulletVelocity {
+	float x;
+	float y;
+	float speed;
+    
+};
+
+class Bullet: public CCSprite {
+public:
+    //The traveling speed of the Bullet on the horizontal line.
+    float bulletVelocityX;
+    
+    //The traveling speed of the Bullet on the vertical line.
+    float bulletVelocityY;
+    
+    //The angle the Bullet is traveling in.
+    float angle;
+    
+    //The angle in radians the Bullet is traveling in.
+    float angleRad;
+    
+    //The speed the Bullet is traveling in ( pixels per update :P ).
+    float speed;
+    
+    
+    int m_numContacts;
+    
+    //new implementation for contact state change
+    void startContact() { m_numContacts++; }
+    void endContact() { m_numContacts--; }
+    void bouncing(float pAngle);
+    
+    
+	Bullet();
+	virtual ~Bullet();
+	static Bullet* createBullet(std::string BulletTypeToCreate);
+	void createBody(b2World &world);
+	b2Body* getBody();
+	float getWidth();
+	float getHeight();
+	float getRadius();
+	bulletVelocity getbulletVelocity();
+	bulletVelocity setbulletVelocity(bulletVelocity v);
+    void verticalBounce(float pAngle);
+    void horizontalBounce(float pAngle);
+    
+	b2Body* getBulletBody();
+    b2Body* getFireBulletBody();
+	void setBulletBody(b2Body* BulletBody);
+	CCRect rect();
+    
+    //	void frameAddOne();
+	int getPriority();
+    
+	void frozenFrameAddOne();
+	int getFrozenFrameLasted();
+	void setFrozenFrameTo0();
+    
+	void skewFrameAddOne();
+	int getSkewFrameLasted();
+	void setSkewFrameLastedTo0();
+    
+    void setFrameLastedTo0();
+    void frameAddOne();
+    int getFrameLasted();
+    
+    
+    enum BulletType {
+		fireBullet
+	};
+    BulletType getBulletState();
+    void setBulletState(BulletType typeOfBullet);
+	BulletType typeOfBullet;
+    
+private:
+    
+	bulletVelocity bulletVelocity;
+	CCTexture2D BulletTexture;
+	b2Body *BulletBody;
+    b2Body *fireBulletBody;
+	int frameLasted;
+	int frozenFrameLasted;
+	int skewFrameLasted;
+	int priority;
+};
+
+#endif /* Bullet_H_ */

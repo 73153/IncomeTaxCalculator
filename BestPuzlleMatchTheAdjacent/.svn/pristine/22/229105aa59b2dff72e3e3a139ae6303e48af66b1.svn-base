@@ -1,0 +1,113 @@
+
+
+#include "HelpLayer.h"
+
+CCSprite * HelpLayer::movingDot = NULL;
+
+HelpLayer::HelpLayer() {
+
+}
+
+HelpLayer::~HelpLayer() {
+
+}
+
+void HelpLayer::initBackground() {
+	//Background
+	winSize = CCDirector::sharedDirector()->getWinSize();
+	CCSprite* settingLayerBackground = CCSprite::create(
+			"HelpSceneBackground.png");
+	settingLayerBackground->setPosition(
+			ccp(winSize.width / 2, winSize.height / 2));
+	this->addChild(settingLayerBackground, 0);
+
+	//Moving Dot
+	movingDot = CCSprite::create("MovingDot.png");
+	movingDot->setPosition(
+			ccp(winSize.width / 2  * 3, winSize.height - (910 + 940) / 2));
+	this->addChild(movingDot, 2);
+}
+
+bool HelpLayer::init() {
+	if (!CCLayer::init())
+		return false;
+	setKeypadEnabled(true);
+	setTouchEnabled(true);
+
+	this->initBackground();
+	this->initBackButton();
+	this->initScroll();
+	return true;
+}
+
+void HelpLayer::keyBackClicked() {
+	CCDirector::sharedDirector()->popScene();
+}
+
+void HelpLayer::initBackButton() {
+
+	//Pause Button
+	CCMenuItemImage *backButtonImage = CCMenuItemImage::create(
+			"Back.png", "Back_Pressed.png", this,
+			menu_selector(HelpLayer::backButtonPressed));
+	backButtonImage->setPosition(ccp(0, 0));
+	CCMenu* backButton = CCMenu::create(backButtonImage, NULL);
+	backButton->setPosition(ccp(winSize.width / 2, winSize.height/2-300));
+	this->addChild(backButton, 3);
+}
+
+void HelpLayer::backButtonPressed() {
+	CCDirector::sharedDirector()->popScene();
+}
+
+void HelpLayer::initScroll() {
+	CCSize _size = CCDirector::sharedDirector()->getWinSize();
+	CCLayerColor* layer = CCLayerColor::create(
+			(ccColor4B ) { 100, 100, 100, 100 });
+	layer->setContentSize(CCSizeMake(_size.width, _size.height/2-100));
+	layer->setPosition(ccp(0, _size.height/2-100));
+
+	ScrollLayer* scroll = ScrollLayer::create();
+	layer->addChild(scroll, 1);
+	this->addChild(layer, 1);
+}
+
+#pragma  mark   COCOSBUILDER INITITIALIZATION
+void HelpLayer::onNodeLoaded(cocos2d::CCNode * pNode,  cocos2d::extension::CCNodeLoader * pNodeLoader)
+{
+    CCLOG("on loaded called");
+
+}
+
+SEL_CallFuncN HelpLayer::onResolveCCBCCCallFuncSelector(CCObject * pTarget, const char* pSelectorName)
+{
+    return NULL;
+}
+
+SEL_MenuHandler HelpLayer::onResolveCCBCCMenuItemSelector(CCObject * pTarget, const char * pSelectorName)
+{
+//    CCB_SELECTORRESOLVER_CCMENUITEM_GLUE(this, "pause", HelpLayer::pause);
+//    CCB_SELECTORRESOLVER_CCMENUITEM_GLUE(this, "resume", HelpLayer::resume);
+    
+    return NULL;
+}
+
+SEL_CCControlHandler HelpLayer::onResolveCCBCCControlSelector(CCObject * pTarget, const char * pSelectorName)
+{
+    return NULL;
+}
+
+bool HelpLayer::onAssignCCBMemberVariable(CCObject * pTarget, const char * pMemberVariableName, CCNode * pNode)
+{
+//    CCB_MEMBERVARIABLEASSIGNER_GLUE(this, "pauseBtn",CCMenuItemImage *, this->pauseBtn);
+    
+    return false;
+}
+
+bool HelpLayer::onAssignCCBCustomProperty(CCObject* pTarget, const char* pMemberVariableName, cocos2d::extension::CCBValue* pCCBValue)
+{
+    bool bRet = false;
+    return bRet;
+}
+
+

@@ -1,0 +1,142 @@
+
+
+#include "ScoreLayer.h"
+#include "../Layers/MenuLayer.h"
+#include "../Layers/MenuLayerLoader.h"
+#include "../GameManager/GameManager.h"
+#include "../CCPageControl/SelectLevel.h"
+
+ScoreLayer::ScoreLayer() {
+
+}
+
+ScoreLayer::~ScoreLayer() {
+}
+
+bool ScoreLayer::init() {
+	if (!CCLayer::init())
+		return false;
+    CCSize winSize = CCDirector::sharedDirector()->getWinSize();
+    
+    CLevelSelectLayer* layer = CLevelSelectLayer::create();
+    this->addChild(layer,20);
+    
+	setKeypadEnabled(true);
+	setTouchEnabled(true);
+	setTouchPriority(kCCMenuHandlerPriority + 1);
+	setTouchMode (kCCTouchesOneByOne);
+
+	this->initBackground();
+	this->initBackButton();
+	this->initHighScore();
+//    CCPageControl * pageControl = CCPageControl::create();
+//    pageControl->setNumberOfPages(5);
+//    pageControl->setCurrentPage(0);
+//    pageControl->setHidesForSinglePage(true);
+    
+//    //NOTE: the position is taken as the origin of the control and not as the center
+//    pageControl->setPosition(ccp(winSize.width/2,100));
+//    
+//    this->addChild(pageControl);
+	return true;
+}
+
+void ScoreLayer::initBackground() {
+	CCSize size = CCDirector::sharedDirector()->getWinSize();
+	CCSprite* settingLayerBackground = CCSprite::create(
+			"ScoreSceneBackground.png");
+	settingLayerBackground->setPosition(ccp(size.width / 2, size.height / 2));
+	this->addChild(settingLayerBackground, 0);
+}
+
+void ScoreLayer::initBackButton() {
+	CCSize size = CCDirector::sharedDirector()->getWinSize();
+
+	//Pause Button
+	CCMenuItemImage *backButtonImage = CCMenuItemImage::create(
+			"Back.png", "Back_Pressed.png", this,
+			menu_selector(ScoreLayer::backButtonPressed));
+	backButtonImage->setPosition(ccp(0, 0));
+	CCMenu* backButton = CCMenu::create(backButtonImage, NULL);
+	backButton->setPosition(ccp(size.width / 2, size.height - 1019));
+	this->addChild(backButton, 2);
+}
+
+void ScoreLayer::keyBackClicked() {
+    GameManager::sharedGameManager()->remove_unused_data();
+    CCScene *help_scene=GameManager::sharedGameManager()->get_scene("MenuLayer.ccbi", "MenuLayer", MenuLayerLoader::loader(), CCScene::create(),false,false);
+   	CCDirector::sharedDirector()->replaceScene(CCTransitionSlideInR::create(0.3,help_scene));
+}
+
+void ScoreLayer::backButtonPressed() {
+    GameManager::sharedGameManager()->remove_unused_data();
+    CCScene *help_scene=GameManager::sharedGameManager()->get_scene("MenuLayer.ccbi", "MenuLayer", MenuLayerLoader::loader(), CCScene::create(),false,false);
+   	CCDirector::sharedDirector()->replaceScene(CCTransitionSlideInR::create(0.3,help_scene));
+}
+
+void ScoreLayer::initHighScore() {
+	CCSize size = CCDirector::sharedDirector()->getWinSize();
+
+	char temp[10];
+	sprintf(temp, "%d", ScoreData::highScore);
+	highScore = CCLabelTTF::create(temp, "Designer-Notes.ttf", 150);
+	highScore->setColor(ccc3(158, 93, 161));
+
+	highScore->setPosition(ccp(size.width / 2, size.height / 2 - 100));
+	this->addChild(highScore, 1);
+}
+#pragma  mark   COCOSBUILDER INITITIALIZATION
+void ScoreLayer::onNodeLoaded(cocos2d::CCNode * pNode,  cocos2d::extension::CCNodeLoader * pNodeLoader)
+{
+    CCLOG("on loaded called");
+    
+}
+
+SEL_CallFuncN ScoreLayer::onResolveCCBCCCallFuncSelector(CCObject * pTarget, const char* pSelectorName)
+{
+    return NULL;
+}
+
+SEL_MenuHandler ScoreLayer::onResolveCCBCCMenuItemSelector(CCObject * pTarget, const char * pSelectorName)
+{
+    //    CCB_SELECTORRESOLVER_CCMENUITEM_GLUE(this, "pause", ScoreLayer::pause);
+    //    CCB_SELECTORRESOLVER_CCMENUITEM_GLUE(this, "resume", ScoreLayer::resume);
+    
+    return NULL;
+}
+
+cocos2d::extension::SEL_CCControlHandler ScoreLayer::onResolveCCBCCControlSelector(CCObject * pTarget, const char * pSelectorName)
+{
+    return NULL;
+}
+
+bool ScoreLayer::onAssignCCBMemberVariable(CCObject * pTarget, const char * pMemberVariableName, CCNode * pNode)
+{
+    //    CCB_MEMBERVARIABLEASSIGNER_GLUE(this, "pauseBtn",CCMenuItemImage *, this->pauseBtn);
+    
+    return false;
+}
+
+bool ScoreLayer::onAssignCCBCustomProperty(CCObject* pTarget, const char* pMemberVariableName, cocos2d::extension::CCBValue* pCCBValue)
+{
+    bool bRet = false;
+    return bRet;
+}
+
+void ScoreLayer::ccTouchesBegan(CCSet *pTouches, CCEvent *pEvent)
+{
+    
+}
+void ScoreLayer::ccTouchesMoved(CCSet *pTouches, CCEvent *pEvent)
+{
+    
+}
+void ScoreLayer::ccTouchesEnded(CCSet *pTouches, CCEvent *pEvent)
+{
+}
+void  ScoreLayer::ccTouchesCancelled(CCSet *pTouches, CCEvent *pEvent)
+{
+    
+}
+
+

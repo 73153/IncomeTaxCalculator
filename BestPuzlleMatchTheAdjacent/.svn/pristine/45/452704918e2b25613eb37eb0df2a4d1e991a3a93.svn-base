@@ -1,0 +1,23 @@
+
+#include "EnlargeItem.h"
+
+EnlargeItem::EnlargeItem() {
+	function = "enlarge";
+
+}
+
+EnlargeItem::~EnlargeItem() {
+	
+}
+
+EnlargeItem* EnlargeItem::createEnlargeItem() {
+
+	EnlargeItem* enlargeItem = new EnlargeItem();
+	if (enlargeItem
+			&& enlargeItem->initWithFile("enlargeItem.png")) {
+		return enlargeItem;
+	}
+	CC_SAFE_DELETE(enlargeItem);
+	return NULL;
+}
+

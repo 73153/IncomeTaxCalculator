@@ -1,0 +1,22 @@
+
+
+#include "ReverseYItem.h"
+
+ReverseYItem::ReverseYItem() {
+	function = "reverseY";
+}
+
+ReverseYItem::~ReverseYItem() {
+}
+
+ReverseYItem* ReverseYItem::createReverseYItem() {
+
+	ReverseYItem* reverseYItem = new ReverseYItem();
+	if (reverseYItem
+			&& reverseYItem->initWithFile("reverseYItem.png")) {
+
+		return reverseYItem;
+	}
+	CC_SAFE_DELETE(reverseYItem);
+	return NULL;
+}

@@ -1,0 +1,199 @@
+
+
+#include "SimpleAudioEngine.h"
+using namespace std;
+
+using namespace CocosDenshion;
+
+
+//FireBall::~FireBall() {
+//	// TODO Auto-generated destructor stub
+//	if (m_pFireBody) {
+//		m_pWorld->DestroyBody(m_pFireBody);
+//		m_pFireBody = NULL;
+//	}
+//
+//	if (m_pGroundBody) {
+//			m_pWorld->DestroyBody(m_pGroundBody);
+//			m_pGroundBody = NULL;
+//		}
+//
+//	CC_SAFE_DELETE(m_pWorld);
+//}
+
+
+FireBall::FireBall():m_pWorld(NULL), m_pFireBody(NULL), m_pIceBody(NULL), m_pFireEmitter(NULL), m_pIceEmitter(NULL) {
+	velocity.speed = 10;
+    
+	velocity.x = 3 + rand() % 8;
+    //    CCLOG("velocity X %f",velocity.x);
+	if (rand() & 1)
+		velocity.x = -velocity.x;
+	velocity.y = -sqrt(velocity.speed * velocity.speed - velocity.x * velocity.x);
+    //    CCLOG("velocity Y %f",velocity.y);
+    
+	frameLasted = 0;
+    m_numContacts = 0;
+	frozenFrameLasted = 0;
+	skewFrameLasted = 0;
+}
+
+FireBall* FireBall::createBall(std::string ballTypeToCreate) {
+    
+	FireBall* ball = new FireBall();
+	if (FireBall && FireBall->initWithFile(ballTypeToCreate.c_str())) {
+		return ball;
+	}
+	CC_SAFE_DELETE(ball);
+	return NULL;
+    
+}
+
+
+
+bool FireBall::init()
+{
+	    // ask director the window size
+	    CCSize size = CCDirector::sharedDirector()->getWinSize();
+	
+	    b2Vec2 gravity;
+	    gravity.Set(0.0f, 0.0f);
+	    m_pWorld = new b2World(gravity);
+	    m_pWorld->SetAllowSleeping(false);
+	    m_pWorld->SetContinuousPhysics(true);
+
+	    	b2BodyDef groundBodyDef;
+	    	groundBodyDef.position.Set(0,0);
+	    	m_pGroundBody = m_pWorld->CreateBody(&groundBodyDef);
+	    	b2EdgeShape groundBox;
+	    	b2FixtureDef groundBoxDef;
+	    	groundBoxDef.shape =&groundBox;
+	    	groundBoxDef.friction = 0.0f;
+	    	groundBoxDef.restitution = 1.0;
+
+	    	groundBox.Set(b2Vec2(VisibleRect::leftBottom().x/PTM_RATIO,VisibleRect::leftBottom().y/PTM_RATIO), b2Vec2(VisibleRect::rightBottom().x/PTM_RATIO,VisibleRect::rightBottom().y/PTM_RATIO));
+	    	m_pGroundBody->CreateFixture(&groundBoxDef);
+	    	groundBox.Set(b2Vec2(VisibleRect::leftTop().x/PTM_RATIO,VisibleRect::leftTop().y/PTM_RATIO), b2Vec2(VisibleRect::leftBottom().x/PTM_RATIO,VisibleRect::leftBottom().y/PTM_RATIO));
+	    	m_pGroundBody->CreateFixture(&groundBoxDef);
+	    	groundBox.Set(b2Vec2(VisibleRect::leftTop().x/PTM_RATIO,VisibleRect::leftTop().y/PTM_RATIO), b2Vec2(VisibleRect::rightTop().x/PTM_RATIO,VisibleRect::rightTop().y/PTM_RATIO));
+	    	m_pGroundBody->CreateFixture(&groundBoxDef);
+	    	groundBox.Set(b2Vec2(VisibleRect::rightBottom().x/PTM_RATIO,VisibleRect::rightBottom().y/PTM_RATIO), b2Vec2(VisibleRect::rightTop().x/PTM_RATIO,VisibleRect::rightTop().y/PTM_RATIO));
+	    	m_pGroundBody->CreateFixture(&groundBoxDef);
+
+	    CCPoint firePosition(100, 200);
+	    b2BodyDef fireBodyDef;
+	    fireBodyDef.position.Set(firePosition.x / PTM_RATIO, firePosition.y / PTM_RATIO);
+	    fireBodyDef.type = b2_dynamicBody;
+	    m_pFireBody = m_pWorld->CreateBody(&fireBodyDef);
+	    b2CircleShape fireShape;
+	    fireShape.m_radius = 10 / PTM_RATIO / 2;
+	    b2FixtureDef fireShapeDef;
+	   	fireShapeDef.shape = &fireShape;
+	   	fireShapeDef.density = 1.0f;
+	   	fireShapeDef.friction = 0.1f;
+	    fireShapeDef.restitution = 1.0f;
+	    m_pFireBody->CreateFixture(&fireShapeDef);
+
+	    b2Vec2 force = b2Vec2(50, -50);
+	    m_pFireBody->ApplyLinearImpulse(force, m_pFireBody->GetWorldCenter());
+
+	    m_pFireEmitter = CCParticleSun::createWithTotalParticles(500);
+	    m_pFireEmitter->setPosition(firePosition);
+	    m_pFireEmitter->setTexture( CCTextureCache::sharedTextureCache()->addImage("fire.png"));
+	    addChild(m_pFireEmitter, 5);
+
+	    scheduleUpdate();
+	    return true;
+}
+
+
+
+void FireBall::update(float dt)
+{
+	int velocityIterations = 8;
+	int positionIterations = 3;
+	m_pWorld->Step(dt, velocityIterations, positionIterations);
+    if (m_pFireEmitter)
+    {
+    	b2Vec2 pos = m_pFireBody->GetPosition();
+
+    	float x = pos.x * PTM_RATIO;
+    	float y = pos.y * PTM_RATIO;
+    	m_pFireEmitter->setPosition( ccp(x, y) );
+    }
+}
+
+
+
+float FireBall::getWidth() {
+	return this->getTextureRect().getMaxY();
+}
+
+float FireBall::getHeight() {
+	return this->getTextureRect().getMaxX();
+}
+
+float FireBall::getRadius() {
+	return this->getTextureRect().getMaxX() / 2;
+}
+
+Velocity FireBall::getVelocity() {
+	return velocity;
+}
+
+Velocity FireBall::setVelocity(Velocity v) {
+	velocity = v;
+}
+
+b2Body* FireBall::getBallBody() {
+	return ballBody;
+}
+void FireBall::setBallBody(b2Body* ballBody) {
+	this->ballBody = ballBody;
+}
+
+CCRect FireBall::rect() {
+    
+	CCSize s = this->getContentSize();
+	return CCRectMake(this->getPosition().x - s.width / 2,
+                      this->getPosition().y - s.height / 2, s.width, s.height);
+    
+}
+
+void FireBall::frameAddOne() {
+	frameLasted++;
+    
+}
+
+int FireBall::getFrameLasted() {
+	return frameLasted;
+}
+
+int FireBall::getPriority() {
+	priority = this->getPosition().y
+    - CCDirector::sharedDirector()->getWinSize().height;
+	priority += ballBody->GetLinearVelocity().y;
+	return priority;
+}
+
+void FireBall::frozenFrameAddOne() {
+	frozenFrameLasted++;
+}
+int FireBall::getFrozenFrameLasted() {
+	return frozenFrameLasted;
+}
+void FireBall::setFrozenFrameTo0() {
+	frozenFrameLasted = 0;
+}
+
+void FireBall::skewFrameAddOne() {
+	skewFrameLasted++;
+}
+int FireBall::getSkewFrameLasted() {
+	return skewFrameLasted;
+}
+void FireBall::setSkewFrameLastedTo0() {
+	skewFrameLasted = 0;
+}
+
+

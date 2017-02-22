@@ -1,0 +1,23 @@
+//
+//  ScoreLayerLoader.h
+//  BreakingBricks
+//
+//  Created by Victor on 7/1/14.
+//
+//
+
+#ifndef BreakingBricks_ScoreLayerLoader_h
+#define BreakingBricks_ScoreLayerLoader_h
+
+#include "../Layers/ScoreLayer.h"
+
+class CCBReader;
+class ScoreLayerLoader : public cocos2d::extension::CCLayerLoader
+{
+public:
+    CCB_STATIC_NEW_AUTORELEASE_OBJECT_METHOD(ScoreLayerLoader, loader);
+protected:
+    CCB_VIRTUAL_NEW_AUTORELEASE_CREATECCNODE_METHOD(ScoreLayer);
+};
+
+#endif

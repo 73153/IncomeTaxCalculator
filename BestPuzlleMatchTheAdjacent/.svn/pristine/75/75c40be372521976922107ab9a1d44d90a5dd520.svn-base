@@ -1,0 +1,29 @@
+#ifndef __CONTACT_LISTENER_H__
+#define __CONTACT_LISTENER_H__
+#include "Box2D.h"
+#include <vector>
+
+struct ContactHolder
+{
+public:
+	b2Fixture* fixtureA;
+	b2Fixture* fixtureB;
+
+	bool operator==(const ContactHolder& other) const
+    {
+        return (fixtureA == other.fixtureA) && (fixtureB == other.fixtureB);
+    }
+};
+
+class ContactListener :	public b2ContactListener
+{
+public:
+	ContactListener(void);
+	~ContactListener(void);
+
+	virtual void BeginContact( b2Contact* contact );
+	virtual void EndContact( b2Contact* contact );
+
+	std::vector<ContactHolder> contacts;
+};
+#endif

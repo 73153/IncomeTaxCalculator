@@ -1,0 +1,155 @@
+#include "AppDelegate.h"
+
+#include "cocos2d.h"
+#include "MenuLayer.h"
+#include "SimpleAudioEngine.h"
+#include "AppMacros.h"
+#include "../GameManager/GameManager.h"
+USING_NS_CC;
+using namespace CocosDenshion;
+
+AppDelegate::AppDelegate()
+{
+    
+}
+
+AppDelegate::~AppDelegate()
+{
+}
+
+bool AppDelegate::applicationDidFinishLaunching()
+{
+    // initialize director
+    CCDirector *pDirector = CCDirector::sharedDirector();
+    pDirector->setOpenGLView(CCEGLView::sharedOpenGLView());
+    
+    // turn on display FPS
+    pDirector->setDisplayStats(false);
+    
+    // set FPS. the default value is 1.0/60 if you don't call this
+    pDirector->setAnimationInterval(1.0 / 60);
+    
+    CCSize frameSize =CCDirector::sharedDirector()->getWinSize();
+    float scale_factor;
+    std::vector<std::string> searchPaths;
+    std::vector<std::string> resDirOrders;
+    
+    TargetPlatform platform = CCApplication::sharedApplication()->getTargetPlatform();
+    pDirector->setProjection(kCCDirectorProjection2D);
+    pDirector->setDepthTest(true);
+    if (platform == kTargetIpad || platform ==kTargetIphone)
+    {
+        searchPaths.push_back("Published-iOS");
+        
+        if(frameSize.height >=resources_ipadhd.size.height)
+        {
+            searchPaths.push_back("resources-ipadhd");
+            resDirOrders.push_back("resources-ipadhd");
+            
+            searchPaths.push_back("GameLayer/resources-ipadhd");
+            resDirOrders.push_back("GameLayer/resources-ipadhd");
+//            
+//            searchPaths.push_back("Continue & Restart/resources-ipadhd");
+//            resDirOrders.push_back("Continue & Restart/resources-ipadhd");
+//            
+//            searchPaths.push_back("CountDown/resources-ipadhd");
+//            resDirOrders.push_back("CountDown/resources-ipadhd");
+//            
+//            searchPaths.push_back("Items/resources-ipadhd");
+//            resDirOrders.push_back("Items/resources-ipadhd");
+            
+            searchPaths.push_back("HelpLayer/resources-ipadhd");
+            resDirOrders.push_back("HelpLayer/resources-ipadhd");
+        
+            
+            searchPaths.push_back("MenuLayer/resources-ipadhd");
+            resDirOrders.push_back("MenuLayer/resources-ipadhd");
+            
+            searchPaths.push_back("PauseLayer/resources-ipadhd");
+            resDirOrders.push_back("PauseLayer/resources-ipadhd");
+            
+            searchPaths.push_back("ScoreLayer/resources-ipadhd");
+            resDirOrders.push_back("ScoreLayer/resources-ipadhd");
+            
+            searchPaths.push_back("SettingLayer/resources-ipadhd");
+            resDirOrders.push_back("SettingLayer/resources-ipadhd");
+            scale_factor=MIN(resources_ipadhd.size.height/frameSize.height, resources_ipadhd.size.width/frameSize.width);
+            pDirector->setContentScaleFactor(scale_factor);
+        }
+        else if (frameSize.height >= resources_ipad.size.height)
+        {
+            searchPaths.push_back("resources-ipad");
+            resDirOrders.push_back("resources-ipad");
+            
+            searchPaths.push_back("GameLayer");
+            resDirOrders.push_back("GameLayer");
+            
+            searchPaths.push_back("Continue & Restart");
+            resDirOrders.push_back("Continue & Restart");
+            
+            searchPaths.push_back("CountDown");
+            resDirOrders.push_back("CountDown");
+            
+            searchPaths.push_back("Items");
+            resDirOrders.push_back("Items");
+            
+            searchPaths.push_back("HelpLayer");
+            resDirOrders.push_back("HelpLayer");
+            
+            searchPaths.push_back("MenuLayer");
+            resDirOrders.push_back("MenuLayer");
+            
+            searchPaths.push_back("PauseLayer");
+            resDirOrders.push_back("PauseLayer");
+            
+            searchPaths.push_back("ScoreLayer");
+            resDirOrders.push_back("ScoreLayer");
+            
+            searchPaths.push_back("SettingLayer");
+            resDirOrders.push_back("SettingLayer");
+            scale_factor=MIN(resources_ipad.size.height/frameSize.height, resources_ipad.size.width/frameSize.width);
+            pDirector->setContentScaleFactor(scale_factor);
+        }
+    }
+    
+    
+    CCFileUtils::sharedFileUtils()->setSearchResolutionsOrder(resDirOrders);
+    // set searching path
+    CCFileUtils::sharedFileUtils()->setSearchPaths(searchPaths);
+    
+    // Set the design resolution
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WINRT) || (CC_TARGET_PLATFORM == CC_PLATFORM_WP8)
+    CCEGLView::sharedOpenGLView()->setDesignResolutionSize(frameSize.width, frameSize.height, kResolutionShowAll);
+#else
+    CCEGLView::sharedOpenGLView()->setDesignResolutionSize(frameSize.width, frameSize.height, kResolutionNoBorder);
+#endif
+    // create a scene. it's an autorelease object
+    CCScene *pScene = MenuLayer::scene();
+    
+    // run
+    pDirector->runWithScene(pScene);
+    
+    
+	SimpleAudioEngine::sharedEngine()->preloadBackgroundMusic( "background.mp3" );
+	SimpleAudioEngine::sharedEngine()->playBackgroundMusic("background.mp3", true);
+    
+    return true;
+}
+
+// This function will be called when the app is inactive. When comes a phone call,it's be invoked too
+void AppDelegate::applicationDidEnterBackground()
+{
+    CCDirector::sharedDirector()->pause();
+    
+    // if you use SimpleAudioEngine, it must be pause
+    SimpleAudioEngine::sharedEngine()->pauseBackgroundMusic();
+}
+
+// this function will be called when the app is active again
+void AppDelegate::applicationWillEnterForeground()
+{
+    CCDirector::sharedDirector()->resume();
+    
+    // if you use SimpleAudioEngine, it must resume here
+    SimpleAudioEngine::sharedEngine()->resumeBackgroundMusic();
+}

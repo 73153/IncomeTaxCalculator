@@ -1,0 +1,22 @@
+
+
+#include "BonusLife.h"
+
+BonusLife::BonusLife() {
+	function = "bonus";
+
+}
+
+BonusLife::~BonusLife() {
+}
+
+BonusLife* BonusLife::createBonusLife() {
+
+	BonusLife* BonusLife = new class BonusLife();
+	if (BonusLife
+			&& BonusLife->initWithFile("bonus-life.png")) {
+		return BonusLife;
+	}
+	CC_SAFE_DELETE(BonusLife);
+	return NULL;
+}

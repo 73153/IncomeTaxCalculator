@@ -1,0 +1,147 @@
+
+#include "Bullet.h"
+
+Bullet::Bullet() {
+//	velocity.speed = 10;
+
+//	velocity.y = -sqrt(velocity.speed * velocity.speed - velocity.x * velocity.x);
+
+	frameLasted = 0;
+    m_numContacts = 0;
+	frozenFrameLasted = 0;
+	skewFrameLasted = 0;
+    bulletVelocity.speed = 10;
+    
+	bulletVelocity.x = 3 + rand() % 8;
+    //    CCLOG("velocity X %f",velocity.x);
+	if (rand() & 1)
+		bulletVelocity.x = -bulletVelocity.x;
+	bulletVelocity.y = -sqrt(bulletVelocity.speed * bulletVelocity.speed - bulletVelocity.x * bulletVelocity.x);
+    //    CCLOG("velocity Y %f",velocity.y);
+    
+
+}
+
+Bullet::~Bullet() {
+	
+}
+
+Bullet* Bullet::createBullet(std::string BulletTypeToCreate) {
+    
+	Bullet* Bullet = new class Bullet();
+	if (Bullet && Bullet->initWithFile(BulletTypeToCreate.c_str())) {
+		return Bullet;
+	}
+	CC_SAFE_DELETE(Bullet);
+	return NULL;
+
+}
+
+float Bullet::getWidth() {
+	return this->getTextureRect().getMaxY();
+}
+
+float Bullet::getHeight() {
+	return this->getTextureRect().getMaxX();
+}
+
+float Bullet::getRadius() {
+	return this->getTextureRect().getMaxX() / 2;
+}
+
+BulletVelocity Bullet::getVelocity() {
+	return bulletVelocity;
+}
+
+BulletVelocity Bullet::setVelocity(BulletVelocity v) {
+	bulletVelocity = v;
+}
+
+b2Body* Bullet::getBulletBody() {
+	return BulletBody;
+}
+b2Body* Bullet::getFireBulletBody() {
+	return fireBulletBody;
+}
+void Bullet::setBulletBody(b2Body* BulletBody) {
+	this->BulletBody = BulletBody;
+}
+
+CCRect Bullet::rect() {
+
+	CCSize s = this->getContentSize();
+	return CCRectMake(this->getPosition().x - s.width / 2,
+			this->getPosition().y - s.height / 2, s.width, s.height);
+
+}
+
+void Bullet::frameAddOne() {
+	frameLasted++;
+
+}
+
+int Bullet::getFrameLasted() {
+	return frameLasted;
+}
+void Bullet::setFrameLastedTo0()
+{
+    frameLasted=0;
+}
+
+int Bullet::getPriority() {
+	priority = this->getPosition().y
+			- CCDirector::sharedDirector()->getWinSize().height;
+	priority += BulletBody->GetLinearVelocity().y;
+	return priority;
+}
+
+void Bullet::frozenFrameAddOne() {
+	frozenFrameLasted++;
+}
+int Bullet::getFrozenFrameLasted() {
+	return frozenFrameLasted;
+}
+void Bullet::setFrozenFrameTo0() {
+	frozenFrameLasted = 0;
+}
+
+void Bullet::skewFrameAddOne() {
+	skewFrameLasted++;
+}
+int Bullet::getSkewFrameLasted() {
+	return skewFrameLasted;
+}
+void Bullet::setSkewFrameLastedTo0() {
+	skewFrameLasted = 0;
+}
+
+//Bouncing against a vertical line.
+void Bullet::verticalBounce(float pAngle)
+{
+    if(angle == 0.0f || angle == 180.0f)
+        angle += -180.0f;
+    else
+        angle = 180.0f - angle;
+    bouncing(angle);
+}
+
+//Bouncing against a horizontal line.
+void Bullet::horizontalBounce(float pAngle)
+{
+    if(angle == 0.0f || angle == 180.0f)
+        angle += -180.0f;
+    else
+        angle = 360.0f - angle;
+    bouncing(angle);
+}
+
+//Shared bouncing function
+void Bullet::bouncing(float pAngle)
+{
+    if(angle < 0.0f) angle += 360.0f;
+    if(angle > 360.0f) angle -= 360.0f;
+    
+    this->angleRad = this->angle * M_PI/180.0f;
+    this->velocityX = cos(this->angleRad) * this->speed;
+    this->velocityY = sin(this->angleRad) * this->speed;
+}
